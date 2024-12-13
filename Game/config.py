@@ -23,7 +23,7 @@ yellow = (255, 255, 0)
 gold = (255, 215, 0)
 white = (254, 255, 255)
 deep_black = (19, 20, 20)
-
+pink = (255, 105, 180)
 
 # SCREEN RESOLUTION
 resolution = (1280, 720)
@@ -31,10 +31,11 @@ width, height = resolution[0], resolution[1]
 fps = 60
 
 # SIZES
-player_size = (int(width * 0.03), int(height * 0.1))  # Smaller player size
+player_size = (int(width * 0.025), int(height * 0.08))  # Smaller player size
 enemy_size = (int(width * 0.025), int(height * 0.045))  # Smaller enemy size
 bullet_size = int(width * 0.006)  # Smaller bullet size
 powerup_size = (int(width * 0.025), int(height * 0.045))  # Smaller power-up size
+chest_size = (int(width * 0.025), int(height * 0.045))  # Smaller chest size
 
 # music volume
 music_volume = 0.2

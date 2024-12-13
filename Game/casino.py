@@ -14,14 +14,14 @@ def casino(player):
     pygame.init()
 
     # Create the screen at the set resolution
-    screen = pygame.display.set_mode(resolution)
+    screen = pygame.display.set_mode(config.resolution)
 
     # Set fonts
-    corbelfont = pygame.font.SysFont("Corbel", int(height * 0.07))
-    comicsansfont = pygame.font.SysFont("Comic Sans MS", int(height * 0.07))
+    corbelfont = pygame.font.SysFont("Corbel", int(config.height * 0.07))
+    comicsansfont = pygame.font.SysFont("Comic Sans MS", int(config.height * 0.07))
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-    blockyfont = pygame.font.Font(blockyfontpath, int(height * 0.07))
-    blockyfontsmall = pygame.font.Font(blockyfontpath, int(height * 0.035))
+    blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
+    blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.035))
 
     # Render the text
     slots_text = blockyfontsmall.render("Slot Machine", True, white)
@@ -32,7 +32,7 @@ def casino(player):
     # Render background
     background_path = os.path.join(base_path, "extras", "casinobg.png")
     background = pygame.image.load(background_path)
-    background = pygame.transform.scale(background, resolution)
+    background = pygame.transform.scale(background, config.resolution)
 
     # Main loop
     while True:

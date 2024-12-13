@@ -1,17 +1,4 @@
-
-
-- Nivel nao pode dar reset ao sair do campod e batalha, logo tem de ser um atributo do player
- 
-- Like wtf e este spawn de mobs inefeciente, arranjaei mas mesmo assim ta uma merda
-
-- Arranjar a shop de acordo com o que ta la 
-
-- Transformar os powerups em abstarct
-
-- Temos de começar a pensar na estetica do jogo( as imagens de fundo tao uma merda 
-e a unica spritede jeito que arranjei e a merda de uma ninja)
-
-- E parem de usar ai atoa, primeiro vejam o que estam a fazer e pensem, nao é por o jogo correr
-que ta a funcionar bem.
-
-
+acabar tutorial
+trocar de pet
+waves de mobs
+trocas powerups para abstract

@@ -11,7 +11,7 @@ from tutorial import tutorial
 
 def interface():
 
-    play_video(video_path, resolution, sound_path)
+    play_video(video_path, config.resolution, sound_path)
 
     while True:
         # Initialize pygame
@@ -19,12 +19,11 @@ def interface():
 
         # Create the screen at the set resolution
         screen = pygame.display.set_mode(config.resolution)
-        width, height = config.resolution
 
         # Set fonts
         blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-        blockyfont = pygame.font.Font(blockyfontpath, int(height * 0.07))
-        blockyfontsmall = pygame.font.Font(blockyfontpath, int(height * 0.035))
+        blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
+        blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.035))
 
         # Render the text
         wilderness_text = blockyfont.render("Hit Or Stand", True, white)
@@ -87,12 +86,11 @@ def interface():
                         options()
                         # Reinitialize the screen and other variables after returning from options
                         screen = pygame.display.set_mode(config.resolution)
-                        width, height = config.resolution
                         blockyfont = pygame.font.Font(
-                            blockyfontpath, int(height * 0.07)
+                            blockyfontpath, int(config.height * 0.07)
                         )
                         blockyfontsmall = pygame.font.Font(
-                            blockyfontpath, int(height * 0.035)
+                            blockyfontpath, int(config.height * 0.035)
                         )
                         wilderness_text = blockyfont.render("Hit Or Stand", True, white)
                         quit_text = blockyfontsmall.render("Quit", True, white)
@@ -192,25 +190,26 @@ def interface():
             )
 
             # Title text
-            screen.blit(title_text, (width * 0.05, height * 0.02))
+            screen.blit(title_text, (config.width * 0.05, config.height * 0.02))
 
             # Update the screen
             pygame.display.update()
 
 
 def wilderness_explorer():
+    config.width, config.height = config.resolution[0], config.resolution[1]
     game_loop()
 
 
 def options():
 
     # Initialize the screen for options
-    screen = pygame.display.set_mode(resolution)
+    screen = pygame.display.set_mode(config.resolution)
 
     # Set fonts
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-    blockyfont = pygame.font.Font(blockyfontpath, int(height * 0.07))
-    blockyfontsmall = pygame.font.Font(blockyfontpath, int(height * 0.05))
+    blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
+    blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
 
     # Render texts
     volume_text = blockyfontsmall.render("Music Volume:", True, white)
@@ -236,7 +235,9 @@ def options():
 
             # Volume adjustment
             if event.type == pygame.MOUSEBUTTONDOWN:
-                volume_bar = pygame.Rect(width * 0.3, height * 0.7, width * 0.4, 20)
+                volume_bar = pygame.Rect(
+                    config.width * 0.3, config.height * 0.7, config.width * 0.4, 20
+                )
                 if volume_bar.collidepoint(mouse):
                     # Map the mouse x-position to the volume level within the range [0, max_volume]
                     relative_position = (mouse[0] - volume_bar.x) / volume_bar.width
@@ -248,7 +249,10 @@ def options():
 
                 # Back button click
                 back_button = pygame.Rect(
-                    width * 0.3, height * 0.8, width * 0.4, height * 0.1
+                    config.width * 0.3,
+                    config.height * 0.8,
+                    config.width * 0.4,
+                    config.height * 0.1,
                 )
                 if back_button.collidepoint(mouse):
                     chime_sound.play()
@@ -259,7 +263,9 @@ def options():
         screen.fill(deep_black)
 
         # Draw volume bar
-        volume_bar = pygame.Rect(width * 0.3, height * 0.7, width * 0.4, 20)
+        volume_bar = pygame.Rect(
+            config.width * 0.3, config.height * 0.7, config.width * 0.4, 20
+        )
         pygame.draw.rect(screen, grey, volume_bar)
         filled_bar = pygame.Rect(
             volume_bar.x,
@@ -284,7 +290,7 @@ def options():
         )
 
         # Draw static texts
-        screen.blit(volume_text, (width * 0.1, height * 0.7))
+        screen.blit(volume_text, (config.width * 0.1, config.height * 0.7))
 
         # Update the screen
         pygame.display.update()

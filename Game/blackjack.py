@@ -10,11 +10,10 @@ import config
 def blackjack(player):
     pygame.init()
 
-    resolution = config.resolution
-    width, height = resolution[0], resolution[1]
+    width, height = config.resolution[0], config.resolution[1]
 
-    WIDTH = resolution[0]
-    HEIGHT = resolution[1]
+    WIDTH = config.resolution[0]
+    HEIGHT = config.resolution[1]
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Blackjack")
 

@@ -3,7 +3,6 @@ import os
 import config
 from player import Player
 from enemy import *
-from powerup import *
 from shed import shed
 from utils import *
 from shop import shop
@@ -34,21 +33,14 @@ def tutorial():
     # set up spawn location
     playertutorial.rect.left = config.width * 0.5
 
-    special_area_path = os.path.join(base_path, "extras", "gunshop1.png")
-    special_area_img = pygame.image.load(special_area_path)
-    special_area_img = pygame.transform.scale(
-        special_area_img, (int(width * 0.2), int(height * 0.3)))
-    
-
     special_area = pygame.Rect(
-        width
-        - (width * 0.109)
-        - (width * 0.02),  # x-coordinate (right margin of 2% from the edge)
-        height * 0.19,  # y-coordinate (4.2% of screen height)
-        width * 0.035,  # width (10.9% of screen width)
-        height * 0.09,  # height (19.4% of screen height)
+        config.width
+        - (config.width * 0.109)
+        - (config.width * 0.02),  # x-coordinate (right margin of 2% from the edge)
+        config.height * 0.19,  # y-coordinate (4.2% of screen height)
+        config.width * 0.035,  # width (10.9% of screen width)
+        config.height * 0.09,  # height (19.4% of screen height)
     )
-
 
     promptcount = 0
     wasd_keys_pressed = set()
@@ -58,17 +50,11 @@ def tutorial():
         clock.tick(config.fps)
         screen.blit(background, (0, 0))
 
-        screen.blit(
-            special_area_img,
-            (width - (width * 0.2) - (width * 0.02), height - height * (0.95)),
-        )
-
         # Update player position based on key presses
         playertutorial.update()
 
         # Draw the player
         player_group.draw(screen)
-
 
         print("promptcount:", promptcount)
 
@@ -163,9 +149,8 @@ def tutorial():
             )
             promptcount += 1
 
-                
-
-        
+        # draw the special area
+        pygame.draw.rect(screen, (0, 255, 0), special_area, 2)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,19 +170,40 @@ def tutorial():
                 ):
                     promptcount += 1  # Advance to next part when all keys pressed
 
-         # Check if the player collides with the special area
+        # Check if the player collides with the special area
         if special_area.colliderect(playertutorial.rect) and promptcount < 80:
             # Go to the shop area (example of what happens here)
-            draw_text_with_outline(screen, "This is the tutorial", special_area.x - config.width*0.15, special_area.y - 50, white,black,blockyfont)
-            draw_text_with_outline(screen, "tf you think would happen?", special_area.x - config.width*0.15, special_area.y - 20, white,black,blockyfont)
+            draw_text_with_outline(
+                screen,
+                "This is the tutorial",
+                special_area.x - config.width * 0.15,
+                special_area.y - 50,
+                white,
+                black,
+                blockyfont,
+            )
+            draw_text_with_outline(
+                screen,
+                "tf you think would happen?",
+                special_area.x - config.width * 0.15,
+                special_area.y - 20,
+                white,
+                black,
+                blockyfont,
+            )
             promptcount += 1
         if special_area.colliderect(playertutorial.rect) and promptcount >= 80:
-            draw_text_with_outline(screen, "Still here?", special_area.x - config.width*0.15, special_area.y - 50, white,black,blockyfont)
+            draw_text_with_outline(
+                screen,
+                "Still here?",
+                special_area.x - config.width * 0.15,
+                special_area.y - 50,
+                white,
+                black,
+                blockyfont,
+            )
 
         if promptcount >= 81 and promptcount < 240:
             promptcount += 1
-        
-            
-        
 
         pygame.display.flip()

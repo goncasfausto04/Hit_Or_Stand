@@ -11,13 +11,9 @@ def slots(player):
     # Initialize Pygame
     pygame.init()
 
-    # Get the current resolution from config
-    resolution = config.resolution
-    width, height = resolution[0], resolution[1]
-
     # Screen settings (16:9 aspect ratio)
-    WIDTH = resolution[0]
-    HEIGHT = resolution[1]
+    WIDTH = config.resolution[0]
+    HEIGHT = config.resolution[1]
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Slot Machine")
 

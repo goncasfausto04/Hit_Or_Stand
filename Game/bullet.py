@@ -1,6 +1,7 @@
 # sprit -> everything that is appearing in 2D
 
 from config import *
+import config
 import pygame
 import math
 
@@ -29,9 +30,9 @@ class Bullet(pygame.sprite.Sprite):
         # killing the bullet if it goes off screen
         if (
             self.rect.x < 0
-            or self.rect.x > width
+            or self.rect.x > config.width
             or self.rect.y < 0
-            or self.rect.y > height
+            or self.rect.y > config.height
         ):
             self.kill()
 
@@ -68,3 +69,12 @@ class pet_bullet(Bullet):
         self.color = yellow
         self.speed = 8
         self.radius = 6.5
+class enemy_bullet(Bullet):
+    def __init__(self, x, y, direction, shooter=None):
+        super().__init__(x, y, direction)
+        self.color = dark_red
+        self.speed = 5
+        self.radius = 10
+        self.shooter = shooter
+        self.damage = 15
+        self.is_enemy_bullet = True  # Mark as an enemy bullet

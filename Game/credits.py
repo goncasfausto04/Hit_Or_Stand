@@ -1,15 +1,16 @@
 import pygame
 import os
 from utils import *
+import config
 
 
 def credits_():
     """Displays the credits screen of the game."""
 
-    screen = pygame.display.set_mode(resolution)
+    screen = pygame.display.set_mode(config.resolution)
 
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-    blockyfont = pygame.font.Font(blockyfontpath, int(height * 0.05))
+    blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
 
     chime = os.path.join(base_path, "extras", "chime1.mp3")
     chime_sound = pygame.mixer.Sound(chime)
@@ -40,32 +41,32 @@ def credits_():
                 pygame.quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if (
-                    width * 0.625 <= mouse[0] <= width * 0.75
-                    and height * 0.833 <= mouse[1] <= height * 0.916
+                    config.width * 0.625 <= mouse[0] <= config.width * 0.75
+                    and config.height * 0.833 <= mouse[1] <= config.height * 0.916
                 ):
                     chime_sound.play()
                     return
 
         screen.fill(deep_black)
-        screen.blit(professors_text, (width * 0.1, height * 0.07))
-        screen.blit(augusto_text, (width * 0.1, height * 0.13))
-        screen.blit(diogo_text, (width * 0.1, height * 0.19))
-        screen.blit(liah_text, (width * 0.1, height * 0.25))
+        screen.blit(professors_text, (config.width * 0.1, config.height * 0.07))
+        screen.blit(augusto_text, (config.width * 0.1, config.height * 0.13))
+        screen.blit(diogo_text, (config.width * 0.1, config.height * 0.19))
+        screen.blit(liah_text, (config.width * 0.1, config.height * 0.25))
 
-        screen.blit(students_text, (width * 0.1, height * 0.4))
-        screen.blit(goncalo_text, (width * 0.1, height * 0.46))
-        screen.blit(bernardo_text, (width * 0.1, height * 0.52))
-        screen.blit(henrique_text, (width * 0.1, height * 0.58))
-        screen.blit(luis_text, (width * 0.1, height * 0.64))
+        screen.blit(students_text, (config.width * 0.1, config.height * 0.4))
+        screen.blit(goncalo_text, (config.width * 0.1, config.height * 0.46))
+        screen.blit(bernardo_text, (config.width * 0.1, config.height * 0.52))
+        screen.blit(henrique_text, (config.width * 0.1, config.height * 0.58))
+        screen.blit(luis_text, (config.width * 0.1, config.height * 0.64))
 
         render_text_wrapped_from_surface(
             screen,
             body_text,
             blockyfont,
             white,
-            x=width * 0.1,
-            y=height * 0.71,
-            max_width=width * 0.8,
+            x=config.width * 0.1,
+            y=config.height * 0.71,
+            max_width=config.width * 0.8,
         )
         draw_buttonutils(
             dark_red,
