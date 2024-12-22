@@ -4,125 +4,6 @@ import cv2
 from config import *
 import config
 
-
-# Function to draw a stick figure with a construction hat
-def draw_stick_figure_with_hat(screen, x, y):
-    # head
-    pygame.draw.circle(screen, (255, 255, 255), (x, y), 20, 2)  # White head outline
-
-    # body
-    pygame.draw.line(screen, (255, 255, 255), (x, y + 20), (x, y + 60), 2)  # Body
-
-    # arms
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 40), (x - 30, y + 40), 2
-    )  # Left arm
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 40), (x + 30, y + 40), 2
-    )  # Right arm
-
-    # legs
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 60), (x - 20, y + 100), 2
-    )  # Left leg
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 60), (x + 20, y + 100), 2
-    )  # Right leg
-
-    # hat
-    hat_color = (255, 215, 0)
-
-    # drawing the construction hat
-    pygame.draw.rect(screen, hat_color, [x - 25, y - 30, 50, 10])  # Hat's brim
-    pygame.draw.rect(screen, hat_color, [x - 20, y - 40, 40, 20])  # Hat's dome
-
-
-# Function to draw a normal stick figure (without a hat)
-def draw_normal_stick_figure(screen, x, y):
-    # head
-    pygame.draw.circle(screen, (255, 255, 255), (x, y), 20, 2)  # White head outline
-
-    # body
-    pygame.draw.line(screen, (255, 255, 255), (x, y + 20), (x, y + 60), 2)  # Body
-
-    # arms
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 40), (x - 30, y + 40), 2
-    )  # Left arm
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 40), (x + 30, y + 40), 2
-    )  # Right arm
-
-    # legs
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 60), (x - 20, y + 100), 2
-    )  # Left leg
-    pygame.draw.line(
-        screen, (255, 255, 255), (x, y + 60), (x + 20, y + 100), 2
-    )  # Right leg
-
-
-def under_construction():
-
-    # creating the screen at 720x720 pixels
-    screen = pygame.display.set_mode(config.resolution)
-
-    # setting up the fonts
-    corbelfont = pygame.font.SysFont("Corbel", 50)
-    conversationfont = pygame.font.SysFont("Ariel", 25)
-
-    # setting my texts:
-    back_text = corbelfont.render("Back", True, white)
-    construction_text = corbelfont.render("Under Construction", True, white)
-    first_speech = conversationfont.render("Can we fix it?", True, white)
-    second_speech = conversationfont.render("Probably not...", True, white)
-
-    # setting up the "images" positions
-    bob_x_position = 460
-    bob_y_position = 450
-
-    normal_x_position = 260
-    normal_y_position = 450
-
-    # same old, same old while true loop
-
-    while True:
-        # getting the mouse position
-        mouse = pygame.mouse.get_pos()
-
-        # event detection
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-
-            # checking if the user clicked the back button
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if 450 <= mouse[0] <= 590 and 600 <= mouse[1] <= 660:
-                    return
-
-        # displaying the screen
-        screen.fill(deep_black)
-
-        # displaying the main UNDER CONSTRUCTION text
-        construction_rect = construction_text.get_rect(center=(760 // 2, 300))
-        screen.blit(construction_text, construction_rect)
-
-        # drawing the back button
-        pygame.draw.rect(screen, dark_red, [450, 600, 140, 60])
-        back_rect = back_text.get_rect(center=(450 + 140 // 2, 600 + 60 // 2))
-        screen.blit(back_text, back_rect)
-
-        # stick figures text and "images"
-        draw_normal_stick_figure(screen, normal_x_position, normal_y_position)
-        draw_stick_figure_with_hat(screen, bob_x_position, bob_y_position)
-
-        screen.blit(first_speech, (normal_x_position - 60, normal_y_position - 80))
-        screen.blit(second_speech, (bob_x_position - 60, bob_y_position - 80))
-
-        # finally, as always, updating the screen
-        pygame.display.update()
-
-
 def pause_game(screen, width, height):
     """Pauses the game and displays a 'Paused' message."""
 
@@ -144,6 +25,7 @@ def pause_game(screen, width, height):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+                
 
 
 def play_video(video_path, resolution, sound_path):
@@ -331,3 +213,30 @@ def draw_text_with_outline(surface, text, x, y, color, outline_color, font):
         for dy in [-1, 1]:
             surface.blit(outline_surface, (x + dx, y + dy))
     surface.blit(text_surface, (x, y))
+
+
+def draw_fps(screen, clock):
+    fps = int(clock.get_fps())
+    font = pygame.font.SysFont(None, 30)
+    fps_text = font.render(f"FPS: {fps}", True, pygame.Color("white"))
+    screen.blit(fps_text, (10, height - 30))
+
+
+def handle_collision(player, collision_rects):
+    for rect in collision_rects:
+        if player.rect.colliderect(rect):
+            # Resolve collision by checking movement direction
+            dx = player.rect.centerx - rect.centerx
+            dy = player.rect.centery - rect.centery
+
+            if abs(dx) > abs(dy):  # Horizontal collision
+                if dx > 0:  # Colliding from the left
+                    player.rect.left = rect.right
+                else:  # Colliding from the right
+                    player.rect.right = rect.left
+            else:  # Vertical collision
+                if dy > 0:  # Colliding from above
+                    player.rect.top = rect.bottom
+                else:  # Colliding from below
+                    player.rect.bottom = rect.top
+

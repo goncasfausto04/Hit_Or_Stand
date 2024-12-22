@@ -4,6 +4,7 @@ import math
 import os  # Import os module
 from bullet import *  # Import all bullet classes
 from config import *  # Assuming you have the config file with the resolution, pet size, etc.
+import config
 
 # Define base_path
 base_path = os.path.dirname(__file__)
@@ -14,7 +15,7 @@ class Pet(pygame.sprite.Sprite):
         super().__init__()
 
         # VISUAL VARIABLES
-        self.image = os.path.join(base_path, "extras", "dog_pet_comp.png")
+        self.image = os.path.join(base_path, "extras", config.pet_image)
         self.image = pygame.image.load(self.image)  # Load image without resizing first
         self.image = pygame.transform.scale(
             self.image, pet_size
@@ -37,6 +38,14 @@ class Pet(pygame.sprite.Sprite):
         self.bullets = bullets  # Pass the bullets group
 
     def update(self):
+
+        if config.pet_image_change == True:  # para nao estar sempre a carregar a imagem
+            self.image = os.path.join(base_path, "extras", config.pet_image)
+            self.image = pygame.image.load(self.image)
+            self.image = pygame.transform.scale(self.image, pet_size)
+            print("pet image changed")
+            config.pet_image_change = False
+
         # Calculate direction to the player
         dx = self.player.rect.x - self.rect.x
         dy = self.player.rect.y - self.rect.y
@@ -61,7 +70,7 @@ class Pet(pygame.sprite.Sprite):
         if self.bullet_cooldown <= 0:
             bullet_class = self.bullet_type
 
-            for _ in range(2):  # Fire 4 bullets in random directions
+            for _ in range(2):  # Fire 2 bullets in random directions
                 angle = random.uniform(
                     0, 2 * math.pi
                 )  # Generate a random angle in radians

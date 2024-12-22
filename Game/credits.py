@@ -28,9 +28,9 @@ def credits_():
 
     students_text = blockyfont.render("Students:", True, white)
     goncalo_text = blockyfont.render("Goncalo Faustino 20231721", True, white)
-    bernardo_text = blockyfont.render("Bernardo Coelho 2023xxxx", True, white)
-    henrique_text = blockyfont.render("Henrique Esteves 2023xxxx", True, white)
-    luis_text = blockyfont.render("Luis Duarte 2023xxxx", True, white)
+    bernardo_text = blockyfont.render("Bernardo Coelho 20231736", True, white)
+    henrique_text = blockyfont.render("Henrique Esteves 20231717", True, white)
+    luis_text = blockyfont.render("Luis Duarte 20231621", True, white)
 
     body_text = "This game was developed as a project for the course of Computation 3, we hope you envjoy the gameplay as much we enjoyed to develop it!"
 

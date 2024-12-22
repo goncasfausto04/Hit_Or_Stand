@@ -216,6 +216,7 @@ def slots(player):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    player.save_progress()
                     pygame.quit()
                     exit()
                 if event.type == pygame.KEYDOWN:
@@ -247,6 +248,7 @@ def slots(player):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                player.save_progress()
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and player.coins >= bet:

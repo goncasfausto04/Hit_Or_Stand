@@ -1,4 +1,3 @@
-from utils import under_construction
 import pygame
 from utils import *  # no need to import pygame because the import is in utils
 from config import *  # importing colors and the like
@@ -41,6 +40,7 @@ def casino(player):
         # Event detection
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                player.save_progress()
                 pygame.quit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:

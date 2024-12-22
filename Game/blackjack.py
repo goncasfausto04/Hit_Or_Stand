@@ -10,7 +10,6 @@ import config
 def blackjack(player):
     pygame.init()
 
-    width, height = config.resolution[0], config.resolution[1]
 
     WIDTH = config.resolution[0]
     HEIGHT = config.resolution[1]
@@ -171,6 +170,7 @@ def blackjack(player):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    player.save_progress()
                     pygame.quit()
                     exit()
                 if event.type == pygame.KEYDOWN:
@@ -244,6 +244,7 @@ def blackjack(player):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                player.save_progress()
                 running = False
 
             if event.type == pygame.KEYDOWN and not game_over_message:

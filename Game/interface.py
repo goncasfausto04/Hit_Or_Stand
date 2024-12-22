@@ -1,4 +1,3 @@
-from utils import under_construction
 from game import game_loop
 import pygame
 from utils import *  # no need to import pygame because the import is in utils
@@ -7,6 +6,7 @@ import os
 from credits import credits_
 import config
 from tutorial import tutorial
+import json
 
 
 def interface():
@@ -214,6 +214,7 @@ def options():
     # Render texts
     volume_text = blockyfontsmall.render("Music Volume:", True, white)
     back_text = blockyfont.render("Back", True, white)
+    reset_text = blockyfont.render("Reset Progress", True, white)
 
     # Volume level
     volume_level = pygame.mixer.music.get_volume()  # Get current volume (0.0 to 1.0)
@@ -221,6 +222,23 @@ def options():
 
     chime_path = os.path.join(base_path, "extras", "chime1.mp3")
     chime_sound = pygame.mixer.Sound(chime_path)
+
+    def reset_progress():
+        save_location = os.path.join(base_path, "player_progress.json")
+        default_data = {
+            "has_dash": False,
+            "level": 1,
+            "exp": 0,
+            "coins": 0,
+            "weapons_purchased": ["Basic Spell"],
+            "pets_purchased": ["Dog"],
+            "best_time": 0,
+            "exp_required": 10,
+            "max_health": 100
+            # Add other default attributes as needed
+        }
+        with open(save_location, "w") as file:
+            json.dump(default_data, file)
 
     # Main loop
     while True:
@@ -259,6 +277,11 @@ def options():
                     # reload the game with the new resolution
                     return
 
+                # Reset button click
+                if button_clicked(0.3, 0.5, 0.4, 0.1, mouse):
+                    chime_sound.play()
+                    reset_progress()
+
         # Drawing the background
         screen.fill(deep_black)
 
@@ -274,6 +297,20 @@ def options():
             volume_bar.height,
         )
         pygame.draw.rect(screen, dark_red, filled_bar)
+
+        # Draw reset button
+        draw_buttonutils(
+            dark_red,
+            glowing_light_red,
+            0.3,
+            0.5,
+            0.4,
+            0.1,
+            reset_text,
+            blockyfont,
+            mouse,
+            screen,
+        )
 
         # Draw Back button
         draw_buttonutils(

@@ -1,2 +1,0 @@
-• Implement at least two "Power-up" of your choice.
-• Add the saving feature that stores all the progress the player has made.
