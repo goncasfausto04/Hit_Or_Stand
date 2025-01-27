@@ -10,10 +10,14 @@ class HUD:
         self.config = config
         self.player = player
 
-        # Fonts
-        self.font_small = pygame.font.Font(None, 20)
-        self.font_medium = pygame.font.Font(None, 24)
-        self.font_large = pygame.font.Font(None, 30)
+        # Fonts using screen percentage
+        self.font_small = pygame.font.Font(None, int(config.height * 0.028))
+        self.font_medium = pygame.font.Font(None, int(config.height * 0.033))
+        self.font_large = pygame.font.Font(None, int(config.height * 0.042))
+
+        self.fps = 0
+        self.fps_update_time = 0
+        self.fps_font = pygame.font.Font(None, int(config.height * 0.025))
 
         # Colors
         self.colors = {
@@ -27,52 +31,57 @@ class HUD:
         }
 
         # Level-up bar dimensions
-        self.bar_x = 0.2 * 1280
-        self.bar_y = 720 - 40
-        self.bar_width = 0.6 * 1280
-        self.bar_height = 15
+        self.bar_x = 0.2 * config.width
+        self.bar_y = config.height * 0.944  # 720-40 equivalent
+        self.bar_width = 0.6 * config.width
+        self.bar_height = config.height * 0.021  # 15px equivalent
 
         # Weapon slot dimensions
-        self.slot_size = 50
-        self.slot_spacing = 10
+        self.slot_size = config.width * 0.039  # ~50px at 1280
+        self.slot_spacing = config.width * 0.008  # 10px equivalent
         self.slot_start_x = self.bar_x
-        self.slot_y = 720 - 95
+        self.slot_y = config.height * 0.868  # 720-95 equivalent
 
         # Dash cooldown bar dimensions
         self.dash_bar_width = 0.09 * config.width
-        self.dash_bar_height = 0.006 * 720
-        self.dash_bar_x = 0.485 * 1280 - (self.dash_bar_width / 2)
-        self.dash_bar_y = 0.9 * 720
+        self.dash_bar_height = 0.008 * config.height
+        self.dash_bar_x = 0.5 * config.width - (self.dash_bar_width / 2)  # Centered
+        self.dash_bar_y = 0.9 * config.height
 
-        #load spell images
+        # Load spell images
         basic_path = os.path.join(base_path, "extras", "basic_spell.png")
         shatterblast_path = os.path.join(base_path, "extras", "shatterblast.png")
         arcane_cascade_path = os.path.join(base_path, "extras", "arcane_cascade.png")
         rebound_rune_path = os.path.join(base_path, "extras", "bouncing.png")
         astral_beam_path = os.path.join(base_path, "extras", "astral_beam.png")
 
-        self.basic_spell = pygame.image.load(basic_path).convert_alpha()
-        self.shatterblast = pygame.image.load(shatterblast_path).convert_alpha()
-        self.arcane_cascade = pygame.image.load(arcane_cascade_path).convert_alpha()
-        self.rebound_rune = pygame.image.load(rebound_rune_path).convert_alpha()
-        self.astral_beam = pygame.image.load(astral_beam_path).convert_alpha()
+        # Scale images dynamically
+        self.basic_spell = self.load_scaled_image(basic_path)
+        self.shatterblast = self.load_scaled_image(shatterblast_path)
+        self.arcane_cascade = self.load_scaled_image(arcane_cascade_path)
+        self.rebound_rune = self.load_scaled_image(rebound_rune_path)
+        self.astral_beam = self.load_scaled_image(astral_beam_path)
 
-        self.basic_spell = pygame.transform.scale(self.basic_spell, (self.slot_size, self.slot_size))
-        self.shatterblast = pygame.transform.scale(self.shatterblast, (self.slot_size, self.slot_size))
-        self.arcane_cascade = pygame.transform.scale(self.arcane_cascade, (self.slot_size, self.slot_size))
-        self.rebound_rune = pygame.transform.scale(self.rebound_rune, (self.slot_size, self.slot_size))
-        self.astral_beam = pygame.transform.scale(self.astral_beam, (self.slot_size, self.slot_size))
+    def load_scaled_image(self, path):
+        image = pygame.image.load(path).convert_alpha()
+        return pygame.transform.scale(image, (int(self.slot_size), int(self.slot_size)))
 
-    def draw_text(self, text, font, color, x, y, center=False):
+    def draw_text(self, text, font, color, x_ratio, y_ratio, center=False):
+        x = x_ratio * self.config.width
+        y = y_ratio * self.config.height
         surface = font.render(text, True, color)
         rect = surface.get_rect(center=(x, y) if center else (x, y))
         self.screen.blit(surface, rect.topleft)
 
-    def draw_bar(self, x, y, width, height, progress, color_bg, color_fg):
+    def draw_bar(self, x_ratio, y_ratio, width_ratio, height_ratio, progress, color_bg, color_fg):
+        x = x_ratio * self.config.width
+        y = y_ratio * self.config.height
+        width = width_ratio * self.config.width
+        height = height_ratio * self.config.height
         pygame.draw.rect(self.screen, color_bg, (x, y, width, height))
         pygame.draw.rect(self.screen, color_fg, (x, y, width * progress, height))
 
-    def draw_weapon_slots(self,player):
+    def draw_weapon_slots(self, player):
         weapon_names = ["1", "2", "3", "4", "5"]
         bullet_types = {
             "1": "Basic Spell",
@@ -87,23 +96,25 @@ class HUD:
             rect = pygame.Rect(x, self.slot_y, self.slot_size, self.slot_size)
 
             pygame.draw.rect(self.screen, self.colors["dark_gray"], rect)
-            if weapon_name == "1":
-                self.screen.blit(self.basic_spell, (x, self.slot_y))
-            elif weapon_name == "2" and "Shatterblast" in player.weapons_purchased:
-                self.screen.blit(self.shatterblast, (x, self.slot_y))
-            elif weapon_name == "3" and "Arcane Cascade" in player.weapons_purchased:
-                self.screen.blit(self.arcane_cascade, (x, self.slot_y))
-            elif weapon_name == "4" and "Rebound Rune" in player.weapons_purchased:
-                self.screen.blit(self.rebound_rune, (x, self.slot_y))
-            elif weapon_name == "5" and "Astral Beam" in player.weapons_purchased:
-                self.screen.blit(self.astral_beam, (x, self.slot_y))
+            images = {
+                "1": self.basic_spell,
+                "2": self.shatterblast,
+                "3": self.arcane_cascade,
+                "4": self.rebound_rune,
+                "5": self.astral_beam
+            }
+            
+            if weapon_name in images and bullet_types[weapon_name] in player.weapons_purchased:
+                self.screen.blit(images[weapon_name], (x, self.slot_y))
+            
             self.draw_text(
                 weapon_name,
                 self.font_medium,
                 self.colors["white"],
-                rect.x + 5,
-                rect.y + 15,
+                (x + 5) / self.config.width,
+                (self.slot_y + 15) / self.config.height
             )
+            
             border_color = (
                 self.colors["green"]
                 if bullet_types[weapon_name] == self.player.bullet_type
@@ -114,10 +125,10 @@ class HUD:
     def draw_level_up_bar(self):
         progress = self.player.exp / self.player.exp_required
         self.draw_bar(
-            self.bar_x,
-            self.bar_y,
-            self.bar_width,
-            self.bar_height,
+            0.2,  # x_ratio
+            0.944,  # y_ratio
+            0.6,  # width_ratio
+            0.021,  # height_ratio
             progress,
             self.colors["white"],
             self.colors["green"],
@@ -126,34 +137,19 @@ class HUD:
             f"EXP: {self.player.exp}/{int(self.player.exp_required)}",
             self.font_medium,
             self.colors["dark_gray"],
-            config.width // 2,
-            self.bar_y + 8,
+            0.5,
+            0.955,
             center=True,
         )
 
-    def draw_health_bar(self):
-        bar_width = 50
-        bar_height = 8
-        health_ratio = self.player.health / self.player.max_health
-        bar_x = self.player.rect.centerx - bar_width // 2
-        bar_y = self.player.rect.bottom + 5
-        self.draw_bar(
-            bar_x,
-            bar_y,
-            bar_width,
-            bar_height,
-            health_ratio,
-            self.colors["red"],
-            self.colors["green"],
-        )
-
+   
     def draw_player_level(self):
         self.draw_text(
             f"Level: {self.player.level}",
             self.font_large,
             self.colors["white"],
-            self.dash_bar_x * 1.07,
-            config.height * 0.925,
+            0.465,
+            0.925,
         )
 
     def draw_best_time(self):
@@ -162,8 +158,8 @@ class HUD:
             f"Record: {minutes:02}:{seconds:02}",
             self.font_large,
             self.colors["white"],
-            1280 * 0.697,
-            0.925 * 720,
+            0.7,
+            0.925,
         )
 
     def draw_player_money(self):
@@ -171,44 +167,60 @@ class HUD:
             f"Coins: {self.player.coins}",
             self.font_large,
             self.colors["gold"],
-            1280 * 0.688,
-            config.height * 0.89,
+            0.688,
+            0.89,
+        )
+    
+     # FPS tracking
+    
+
+    def update_fps(self, fps):
+        """Update the current FPS value"""
+        self.fps = fps
+
+    def draw_fps(self):
+        """Draw FPS counter in bottom left corner"""
+        fps_text = f"FPS: {int(self.fps)}"
+        self.draw_text(
+            fps_text,
+            self.fps_font,
+            self.colors["white"],
+            0.02,  # 2% from left
+            0.95,  # 95% from top (bottom 5%)
+            center=False
         )
 
-    def draw_transparent_bar(self, x, y, width, height, color, alpha):
-        """
-        Draws a semi-transparent bar.
 
-        :param x: X-coordinate of the bar.
-        :param y: Y-coordinate of the bar.
-        :param width: Width of the bar.
-        :param height: Height of the bar.
-        :param color: RGB color tuple for the bar.
-        :param alpha: Transparency level (0 to 255).
-        """
-        # Create a surface with per-pixel alpha
-        s = pygame.Surface((width, height), pygame.SRCALPHA)
-        s.fill((*color, alpha))  # Add alpha to the color
-        self.screen.blit(s, (x, y))
+    def draw_transparent_bar(self, x_ratio, y_ratio, width_ratio, height_ratio, color, alpha):
+        s = pygame.Surface((
+            int(width_ratio * self.config.width), 
+            int(height_ratio * self.config.height)
+        ), pygame.SRCALPHA)
+        s.fill((*color, alpha))
+        self.screen.blit(s, (
+            x_ratio * self.config.width,
+            y_ratio * self.config.height
+        ))
 
     def draw_dash_cooldown(self):
         self.draw_text(
             "Dash",
             self.font_large,
             self.colors["white"],
-            self.dash_bar_x * 1.04,
-            self.dash_bar_y - self.dash_bar_height * 2,
+            0.454,
+            0.88,
             center=True,
         )
+        
         timer = self.player.dash_cooldown
         max_cooldown = fps * 2
         if timer > 0:
             progress = timer / max_cooldown
             self.draw_bar(
-                self.dash_bar_x,
-                self.dash_bar_y,
-                self.dash_bar_width,
-                self.dash_bar_height,
+                0.485 - (0.09/2),  # x_ratio centered
+                0.9,  # y_ratio
+                0.09,  # width_ratio
+                0.008,  # height_ratio
                 progress,
                 self.colors["gray"],
                 self.colors["green"],
@@ -217,8 +229,8 @@ class HUD:
                 f"{timer / fps:.1f}",
                 self.font_large,
                 self.colors["white"],
-                self.dash_bar_x * 1.13,
-                self.dash_bar_y - self.dash_bar_height * 2,
+                0.53,
+                0.88,
                 center=True,
             )
         else:
@@ -226,30 +238,21 @@ class HUD:
                 "Space Bar",
                 self.font_small,
                 self.colors["white"],
-                self.dash_bar_x * 1.15,
-                self.dash_bar_y - self.dash_bar_height * 2,
+                0.5,
+                0.88,
                 center=True,
-            )
-            self.draw_bar(
-                self.dash_bar_x,
-                self.dash_bar_y,
-                self.dash_bar_width,
-                self.dash_bar_height,
-                0,
-                self.colors["gray"],
-                self.colors["green"],
             )
 
     def draw(self):
+        self.update_fps(fps)
         self.draw_transparent_bar(
-            config.width * 0.19,
-            config.height * 0.855,
-            800,
-            90,
+            0.19,
+            0.855,
+            0.625,  # 800/1280 equivalent
+            0.125,  # 90/720 equivalent
             self.colors["deep_black"],
             150,
         )
-        self.draw_health_bar()
         self.draw_level_up_bar()
         self.draw_weapon_slots(self.player)
         self.draw_player_level()
@@ -257,3 +260,4 @@ class HUD:
         if self.player.has_dash:
             self.draw_dash_cooldown()
         self.draw_best_time()
+        self.draw_fps()

@@ -4,6 +4,7 @@ import cv2
 from config import *
 import config
 import sys
+import json
 
 def pause_game(screen, width, height):
     """Pauses the game and displays a 'Paused' message."""
@@ -218,12 +219,6 @@ def draw_text_with_outline(surface, text, x, y, color, outline_color, font):
     surface.blit(text_surface, (x, y))
 
 
-def draw_fps(screen, clock):
-    fps = int(clock.get_fps())
-    font = pygame.font.SysFont(None, 30)
-    fps_text = font.render(f"FPS: {fps}", True, pygame.Color("white"))
-    screen.blit(fps_text, (10, height - 30))
-
 
 def handle_collision(player, collision_rects):
     for rect in collision_rects:
@@ -242,4 +237,36 @@ def handle_collision(player, collision_rects):
                     player.rect.top = rect.bottom
                 else:  # Colliding from below
                     player.rect.bottom = rect.top
+
+def reset_progress():
+        """Reset progress to default values."""
+        if os.name == 'nt':  # Windows
+            save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand")
+        else:  # macOS/Linux
+            save_dir = os.path.expanduser("~/.hitorstand")
+        
+        # Ensure the directory exists
+        os.makedirs(save_dir, exist_ok=True)
+
+        save_location = os.path.join(save_dir, "player_progress.json")
+
+        # Define default progress data
+        default_data = {
+            "has_dash": False,
+            "level": 1,
+            "exp": 0,
+            "coins": 0,
+            "weapons_purchased": ["Basic Spell"],
+            "pets_purchased": ["Dog"],
+            "best_time": 0,
+            "exp_required": 10,
+            "max_health": 100
+            # Add other default attributes as needed
+        }
+
+        # Save the default data to the save file
+        with open(save_location, "w") as file:
+            json.dump(default_data, file)
+        
+        print(f"Progress reset to default and saved to {save_location}")
 

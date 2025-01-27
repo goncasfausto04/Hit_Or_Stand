@@ -55,6 +55,8 @@ def game_loop():
 
 def execute_game(player, pet):
 
+    
+
     base_path = os.path.dirname(__file__)
     background_path = os.path.join(base_path, "extras", "Battleground.png")
     background = pygame.image.load(background_path)
@@ -66,6 +68,7 @@ def execute_game(player, pet):
     mouse = pygame.mouse.get_pos()  # Get mouse position
     pygame.display.set_caption("Hit or Stand")
     hud = HUD(screen, config, player)
+    
 
     leave_text = blockyfont.render("Leave", True, white)
     not_leave_text = blockyfont.render("Stay", True, white)
@@ -161,7 +164,6 @@ def execute_game(player, pet):
             bullet.draw(screen)
         pet_group.draw(screen)
         player.draw_health_bar(screen)
-        draw_fps(screen, clock)
         player_group.draw(screen)
         for enemy in enemies:
             enemy.draw(screen)  # Call the draw method for each enemy

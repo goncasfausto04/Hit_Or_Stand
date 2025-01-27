@@ -106,6 +106,8 @@ def shed(player, pet, spawn_location):
         player_group.update()
         pet_group.update()
 
+        
+
         # Check if the player collides with the special area
         if special_area.colliderect(player.rect):
             # Go to the shop area (example of what happens here)
@@ -130,7 +132,6 @@ def shed(player, pet, spawn_location):
         keys = pygame.key.get_pressed()
         player.change_bullet_type(keys)
 
-        draw_fps(screen, clock)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
