@@ -105,6 +105,7 @@ def shed(player, pet, spawn_location):
         # Update the player and pet groups
         player_group.update()
         pet_group.update()
+        draw_fps(screen, clock)
 
         
 

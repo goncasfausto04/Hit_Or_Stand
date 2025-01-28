@@ -15,9 +15,6 @@ class HUD:
         self.font_medium = pygame.font.Font(None, int(config.height * 0.033))
         self.font_large = pygame.font.Font(None, int(config.height * 0.042))
 
-        self.fps = 0
-        self.fps_update_time = 0
-        self.fps_font = pygame.font.Font(None, int(config.height * 0.025))
 
         # Colors
         self.colors = {
@@ -178,17 +175,6 @@ class HUD:
         """Update the current FPS value"""
         self.fps = fps
 
-    def draw_fps(self):
-        """Draw FPS counter in bottom left corner"""
-        fps_text = f"FPS: {int(self.fps)}"
-        self.draw_text(
-            fps_text,
-            self.fps_font,
-            self.colors["white"],
-            0.02,  # 2% from left
-            0.95,  # 95% from top (bottom 5%)
-            center=False
-        )
 
 
     def draw_transparent_bar(self, x_ratio, y_ratio, width_ratio, height_ratio, color, alpha):
@@ -260,4 +246,3 @@ class HUD:
         if self.player.has_dash:
             self.draw_dash_cooldown()
         self.draw_best_time()
-        self.draw_fps()

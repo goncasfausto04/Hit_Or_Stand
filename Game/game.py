@@ -507,4 +507,5 @@ def execute_game(player, pet):
                                 player.best_time = time
                             return "shed"
 
+        draw_fps(screen, clock)
         pygame.display.flip()

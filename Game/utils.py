@@ -270,3 +270,8 @@ def reset_progress():
         
         print(f"Progress reset to default and saved to {save_location}")
 
+def draw_fps(screen, clock):
+    """Draw the FPS (frames per second) on the screen."""
+    font=pygame.font.Font(None, 25)
+    fps = int(clock.get_fps())
+    draw_text(screen, f"FPS: {fps}", 2, config.height*0.97, font, white)
