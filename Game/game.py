@@ -142,7 +142,8 @@ def execute_game(player, pet):
                 sys.exit()
 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pause_game(screen, config.width, config.height)
+                pause_game(screen, config.width, config.height,player)
+                current_state = "menu"
 
         # Handle changing bullet type (check for 1, 2, or 3 key press)
         keys = pygame.key.get_pressed()

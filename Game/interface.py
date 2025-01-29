@@ -12,8 +12,6 @@ import sys
 
 def interface():
 
-    play_video(video_path, config.resolution, sound_path)
-
     while True:
         # Create the screen at the set resolution
         screen = pygame.display.set_mode(config.resolution)

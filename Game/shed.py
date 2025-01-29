@@ -13,6 +13,8 @@ def shed(player, pet, spawn_location):
     background_path = os.path.join(base_path, "extras", "shedbg.png")
     # scalling the background image into our selected resolution
     background = pygame.image.load(background_path)
+    frame_counter = 0
+
 
     # setting up the screen
     background = pygame.transform.scale(background, config.resolution)
@@ -106,9 +108,9 @@ def shed(player, pet, spawn_location):
         player_group.update()
         pet_group.update()
         draw_fps(screen, clock)
+        frame_counter += 1
 
         
-
         # Check if the player collides with the special area
         if special_area.colliderect(player.rect):
             # Go to the shop area (example of what happens here)
@@ -141,6 +143,6 @@ def shed(player, pet, spawn_location):
                 sys.exit()
                 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pause_game(screen, config.width, config.height)
+                pause_game(screen, config.width, config.height,player)
 
         pygame.display.flip()

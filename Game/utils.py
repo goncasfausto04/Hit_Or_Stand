@@ -6,27 +6,38 @@ import config
 import sys
 import json
 
-def pause_game(screen, width, height):
+
+def pause_game(screen, width, height,player):
     """Pauses the game and displays a 'Paused' message."""
 
     # Set up the font
     font_path = os.path.join(base_path, "extras", "Pixeboy.ttf")
     font = pygame.font.Font(font_path, 100)
+    font1 = pygame.font.Font(font_path, 50)
     text = font.render("Paused", True, (255, 255, 255))
     text_rect = text.get_rect(center=(width // 2, height // 2))
+    main_menu = font1.render("Main Menu", True, (255, 255, 255))
 
     # Display the 'Paused' message
     screen.blit(text, text_rect)
-    pygame.display.flip()
+
+    import interface
 
     # Infinite loop until the user unpauses
     while True:
+        draw_buttonutils(dark_red, red, 0.4, 0.6, 0.2, 0.1 ,main_menu, font1, pygame.mouse.get_pos(), screen)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return
+                return 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_clicked(0.4, 0.6, 0.2, 0.1, pygame.mouse.get_pos()):
+                    player.save_progress()
+                    interface.interface()
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+        pygame.display.flip()
+
                 
 
 
@@ -275,3 +286,4 @@ def draw_fps(screen, clock):
     font=pygame.font.Font(None, 25)
     fps = int(clock.get_fps())
     draw_text(screen, f"FPS: {fps}", 2, config.height*0.97, font, white)
+
