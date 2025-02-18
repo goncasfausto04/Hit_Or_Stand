@@ -5,16 +5,13 @@ import os
 from config import *
 from player import Player
 import config
+import sys
 
 
 def blackjack(player):
-    pygame.init()
-
-    resolution = config.resolution
-    width, height = resolution[0], resolution[1]
-
-    WIDTH = resolution[0]
-    HEIGHT = resolution[1]
+ 
+    WIDTH = config.resolution[0]
+    HEIGHT = config.resolution[1]
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Blackjack")
 
@@ -172,8 +169,10 @@ def blackjack(player):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    player.save_progress()
                     pygame.quit()
-                    exit()
+                    sys.exit()
+                    
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         if input_text.isdigit() and int(input_text) <= player.coins:
@@ -245,6 +244,7 @@ def blackjack(player):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                player.save_progress()
                 running = False
 
             if event.type == pygame.KEYDOWN and not game_over_message:
@@ -261,3 +261,4 @@ def blackjack(player):
         clock.tick(30)
 
     pygame.quit()
+    sys.exit()

@@ -8,16 +8,9 @@ from utils import *
 
 def slots(player):
 
-    # Initialize Pygame
-    pygame.init()
-
-    # Get the current resolution from config
-    resolution = config.resolution
-    width, height = resolution[0], resolution[1]
-
     # Screen settings (16:9 aspect ratio)
-    WIDTH = resolution[0]
-    HEIGHT = resolution[1]
+    WIDTH = config.resolution[0]
+    HEIGHT = config.resolution[1]
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Slot Machine")
 
@@ -220,8 +213,9 @@ def slots(player):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    player.save_progress()
                     pygame.quit()
-                    exit()
+                    sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         if input_text.isdigit() and int(input_text) <= player.coins:
@@ -251,6 +245,7 @@ def slots(player):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                player.save_progress()
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and player.coins >= bet:
@@ -271,3 +266,4 @@ def slots(player):
         pygame.display.flip()
 
     pygame.quit()
+    sys.exit()
