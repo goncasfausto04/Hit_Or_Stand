@@ -2,7 +2,7 @@ import pygame
 import os
 from utils import *
 import config
-
+import sys
 
 def credits_():
     """Displays the credits screen of the game."""
@@ -39,6 +39,7 @@ def credits_():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if (
                     config.width * 0.625 <= mouse[0] <= config.width * 0.75

@@ -3,28 +3,41 @@ import os
 import cv2
 from config import *
 import config
+import sys
+import json
 
-def pause_game(screen, width, height):
+
+def pause_game(screen, width, height,player):
     """Pauses the game and displays a 'Paused' message."""
 
     # Set up the font
     font_path = os.path.join(base_path, "extras", "Pixeboy.ttf")
     font = pygame.font.Font(font_path, 100)
+    font1 = pygame.font.Font(font_path, 50)
     text = font.render("Paused", True, (255, 255, 255))
     text_rect = text.get_rect(center=(width // 2, height // 2))
+    main_menu = font1.render("Main Menu", True, (255, 255, 255))
 
     # Display the 'Paused' message
     screen.blit(text, text_rect)
-    pygame.display.flip()
+
+    import interface
 
     # Infinite loop until the user unpauses
     while True:
+        draw_buttonutils(dark_red, red, 0.4, 0.6, 0.2, 0.1 ,main_menu, font1, pygame.mouse.get_pos(), screen)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return
+                return 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_clicked(0.4, 0.6, 0.2, 0.1, pygame.mouse.get_pos()):
+                    player.save_progress()
+                    interface.interface()
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
+        pygame.display.flip()
+
                 
 
 
@@ -59,6 +72,7 @@ def play_video(video_path, resolution, sound_path):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if (
                     event.key == pygame.K_ESCAPE
@@ -194,6 +208,7 @@ def prompt(screen, width, height, content):
                 return
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
                 exit()
 
 
@@ -215,12 +230,6 @@ def draw_text_with_outline(surface, text, x, y, color, outline_color, font):
     surface.blit(text_surface, (x, y))
 
 
-def draw_fps(screen, clock):
-    fps = int(clock.get_fps())
-    font = pygame.font.SysFont(None, 30)
-    fps_text = font.render(f"FPS: {fps}", True, pygame.Color("white"))
-    screen.blit(fps_text, (10, height - 30))
-
 
 def handle_collision(player, collision_rects):
     for rect in collision_rects:
@@ -239,4 +248,42 @@ def handle_collision(player, collision_rects):
                     player.rect.top = rect.bottom
                 else:  # Colliding from below
                     player.rect.bottom = rect.top
+
+def reset_progress():
+        """Reset progress to default values."""
+        if os.name == 'nt':  # Windows
+            save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand")
+        else:  # macOS/Linux
+            save_dir = os.path.expanduser("~/.hitorstand")
+        
+        # Ensure the directory exists
+        os.makedirs(save_dir, exist_ok=True)
+
+        save_location = os.path.join(save_dir, "player_progress.json")
+
+        # Define default progress data
+        default_data = {
+            "has_dash": False,
+            "level": 1,
+            "exp": 0,
+            "coins": 0,
+            "weapons_purchased": ["Basic Spell"],
+            "pets_purchased": ["Dog"],
+            "best_time": 0,
+            "exp_required": 10,
+            "max_health": 100
+            # Add other default attributes as needed
+        }
+
+        # Save the default data to the save file
+        with open(save_location, "w") as file:
+            json.dump(default_data, file)
+        
+        print(f"Progress reset to default and saved to {save_location}")
+
+def draw_fps(screen, clock):
+    """Draw the FPS (frames per second) on the screen."""
+    font=pygame.font.Font(None, 25)
+    fps = int(clock.get_fps())
+    draw_text(screen, f"FPS: {fps}", 2, config.height*0.97, font, white)
 

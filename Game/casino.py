@@ -9,8 +9,6 @@ from slots import slots
 
 
 def casino(player):
-    # Initialize pygame
-    pygame.init()
 
     # Create the screen at the set resolution
     screen = pygame.display.set_mode(config.resolution)
@@ -42,6 +40,7 @@ def casino(player):
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Skins button

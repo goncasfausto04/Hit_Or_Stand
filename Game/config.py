@@ -30,6 +30,13 @@ resolution = (1280, 720)
 width, height = resolution[0], resolution[1]
 fps = 60
 
+# config.py
+RESOLUTIONS = [
+    (1280, 720),
+    (1600, 900),
+    (1920, 1080)
+]
+
 # pet type
 pet_image = "dog_pet_comp.png"
 pet_image_change = False

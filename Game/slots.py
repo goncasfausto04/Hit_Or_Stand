@@ -8,9 +8,6 @@ from utils import *
 
 def slots(player):
 
-    # Initialize Pygame
-    pygame.init()
-
     # Screen settings (16:9 aspect ratio)
     WIDTH = config.resolution[0]
     HEIGHT = config.resolution[1]
@@ -218,7 +215,7 @@ def slots(player):
                 if event.type == pygame.QUIT:
                     player.save_progress()
                     pygame.quit()
-                    exit()
+                    sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         if input_text.isdigit() and int(input_text) <= player.coins:
@@ -269,3 +266,4 @@ def slots(player):
         pygame.display.flip()
 
     pygame.quit()
+    sys.exit()

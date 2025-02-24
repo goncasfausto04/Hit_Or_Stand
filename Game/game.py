@@ -11,6 +11,7 @@ from shop import shop
 from chest import TreasureChest
 from abstractclasses import *
 from hud import HUD
+import sys
 
 
 # endless loop that will keep the game running
@@ -54,6 +55,8 @@ def game_loop():
 
 def execute_game(player, pet):
 
+    
+
     base_path = os.path.dirname(__file__)
     background_path = os.path.join(base_path, "extras", "Battleground.png")
     background = pygame.image.load(background_path)
@@ -65,6 +68,7 @@ def execute_game(player, pet):
     mouse = pygame.mouse.get_pos()  # Get mouse position
     pygame.display.set_caption("Hit or Stand")
     hud = HUD(screen, config, player)
+    
 
     leave_text = blockyfont.render("Leave", True, white)
     not_leave_text = blockyfont.render("Stay", True, white)
@@ -135,9 +139,11 @@ def execute_game(player, pet):
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
-                exit()
+                sys.exit()
+
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pause_game(screen, config.width, config.height)
+                pause_game(screen, config.width, config.height,player)
+                current_state = "menu"
 
         # Handle changing bullet type (check for 1, 2, or 3 key press)
         keys = pygame.key.get_pressed()
@@ -159,7 +165,6 @@ def execute_game(player, pet):
             bullet.draw(screen)
         pet_group.draw(screen)
         player.draw_health_bar(screen)
-        draw_fps(screen, clock)
         player_group.draw(screen)
         for enemy in enemies:
             enemy.draw(screen)  # Call the draw method for each enemy
@@ -444,7 +449,8 @@ def execute_game(player, pet):
                     if event.type == pygame.QUIT:
                         player.save_progress()
                         pygame.quit()
-                        exit()
+                        sys.exit()
+
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if button_clicked(
                             0.5 - (0.125 / 2), 0.5 - (0.125 / 2), 0.125, 0.125, mouse
@@ -486,7 +492,8 @@ def execute_game(player, pet):
                     if event.type == pygame.QUIT:
                         player.save_progress()
                         pygame.quit()
-                        exit()
+                        sys.exit()
+
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if button_clicked(
                             0.4 - (0.125 / 2), 0.5 - (0.083 / 2), 0.125, 0.083, mouse
@@ -501,4 +508,5 @@ def execute_game(player, pet):
                                 player.best_time = time
                             return "shed"
 
+        draw_fps(screen, clock)
         pygame.display.flip()

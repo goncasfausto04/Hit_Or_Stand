@@ -4,6 +4,7 @@ import config
 import os
 from config import *
 from player import Player
+import sys
 
 
 class TreasureChest(pygame.sprite.Sprite):
@@ -97,6 +98,7 @@ class TreasureChest(pygame.sprite.Sprite):
                 if event.type == pygame.QUIT:
                     player.save_progress()
                     pygame.quit()
+                    sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     for i, pos in enumerate(self.card_positions):

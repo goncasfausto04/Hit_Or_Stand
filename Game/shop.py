@@ -9,9 +9,6 @@ from pet import Pet
 
 
 def shop(player):
-    # Initialize pygame
-    pygame.init()
-
     # Create the screen at the set resolution
     screen = pygame.display.set_mode(config.resolution)
 
@@ -40,6 +37,7 @@ def shop(player):
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
 
@@ -131,6 +129,7 @@ def weapons_shop(player):
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Define a reusable function for purchasing logic
@@ -267,6 +266,7 @@ def pet_shop(player):
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Define a reusable function for purchasing logic

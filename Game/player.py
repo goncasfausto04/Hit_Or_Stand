@@ -93,8 +93,21 @@ class Player(pygame.sprite.Sprite):
         self.best_time = 0
         self.load_progress()
 
+    def get_save_path(self):
+        """Determine the save directory and file path."""
+        if os.name == 'nt':  # Windows
+            save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand")
+        else:  # macOS/Linux
+            save_dir = os.path.expanduser("~/.hitorstand")
+        
+        # Ensure the directory exists
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # Return the full path to the save file
+        return os.path.join(save_dir, "player_progress.json")
+
     def save_progress(self):
-        save_location = os.path.join(base_path, "player_progress.json")
+        save_location = self.get_save_path()
         player_data = {
             "has_dash": self.has_dash,
             "level": self.level,
@@ -105,13 +118,13 @@ class Player(pygame.sprite.Sprite):
             "best_time": self.best_time,
             "exp_required": self.exp_required,
             "max_health": self.max_health,
-            # Add other attributes you want to save
         }
         with open(save_location, "w") as file:
             json.dump(player_data, file)
+        print(f"Progress saved to {save_location}")
 
     def load_progress(self):
-        save_location = os.path.join(base_path, "player_progress.json")
+        save_location = self.get_save_path()
         if os.path.exists(save_location):
             with open(save_location, "r") as file:
                 player_data = json.load(file)
@@ -124,10 +137,9 @@ class Player(pygame.sprite.Sprite):
                 self.best_time = player_data["best_time"]
                 self.exp_required = player_data["exp_required"]
                 self.max_health = player_data["max_health"]
-                # Load other attributes as needed
+                print(f"Progress loaded from {save_location}")
         else:
-            pass
-
+            print("No save file found. Starting with default values.")
     def activate_powerup(self):
         """
         Activates the invincibility power-up for 15 seconds.
