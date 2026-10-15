@@ -1,3 +1,4 @@
+import window
 import pygame
 from utils import *  # no need to import pygame because the import is in utils
 from config import *  # importing colors and the like
@@ -11,7 +12,7 @@ from slots import slots
 def casino(player):
 
     # Create the screen at the set resolution
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
 
     # Set fonts
     corbelfont = pygame.font.SysFont("Corbel", int(config.height * 0.07))
@@ -35,10 +36,10 @@ def casino(player):
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        mouse = pygame.mouse.get_pos()  # Get mouse position
+        mouse = window.mouse_position()  # Get mouse position
 
         # Event detection
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -103,4 +104,4 @@ def casino(player):
         )
 
         # Update the screen
-        pygame.display.update()
+        window.present()

@@ -1,3 +1,4 @@
+import window
 import random
 import pygame
 import config
@@ -91,19 +92,19 @@ class TreasureChest(pygame.sprite.Sprite):
             ui_clock.tick(60)
             # Clear screen
             self.draw_cards(screen)
-            pygame.display.flip()
+            window.present()
 
             if running == False and last_loop == True:
                 last_loop = False
                 wait_with_events(1500, player)
 
-            for event in pygame.event.get():
+            for event in window.get_events():
                 if event.type == pygame.QUIT:
                     player.save_progress()
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
+                    mouse_pos = window.mouse_position()
                     for i, pos in enumerate(self.card_positions):
                         card_rect = pygame.Rect(*pos, *self.card_size)
                         if (

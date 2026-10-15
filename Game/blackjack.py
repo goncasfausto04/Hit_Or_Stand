@@ -1,3 +1,4 @@
+import window
 import pygame
 import random
 from utils import wait_with_events
@@ -12,7 +13,7 @@ def blackjack(player):
  
     WIDTH = config.resolution[0]
     HEIGHT = config.resolution[1]
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = window.get_screen()
     pygame.display.set_caption("Blackjack")
 
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
@@ -167,9 +168,9 @@ def blackjack(player):
             screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
             input_box.w = max(input_box_width, txt_surface.get_width() + 10)
 
-            pygame.display.flip()
+            window.present()
 
-            for event in pygame.event.get():
+            for event in window.get_events():
                 if event.type == pygame.QUIT:
                     player.save_progress()
                     pygame.quit()
@@ -238,13 +239,13 @@ def blackjack(player):
 
         if game_over_message:
             draw_text(game_over_message, WIDTH // 2 - 200, HEIGHT // 2 - 50)
-            pygame.display.flip()
+            window.present()
             wait_with_events(2000, player)
             set_bet()
             deck, player_hand, dealer_hand, player_stands = restart_game()
             game_over_message = None
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 running = False
@@ -259,7 +260,7 @@ def blackjack(player):
                 elif event.key == pygame.K_ESCAPE:
                     return
 
-        pygame.display.flip()
+        window.present()
         clock.tick(30)
 
     pygame.quit()

@@ -1,3 +1,4 @@
+import window
 import pygame
 import random
 from config import *
@@ -11,7 +12,7 @@ def slots(player):
     # Screen settings (16:9 aspect ratio)
     WIDTH = config.resolution[0]
     HEIGHT = config.resolution[1]
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = window.get_screen()
     pygame.display.set_caption("Slot Machine")
 
     # Slot settings
@@ -132,8 +133,8 @@ def slots(player):
         for i in range(15):  # Fewer frames for quicker spins
             results = [random.choice(symbols) for _ in range(3)]
             draw_slot_machine(results)
-            pygame.display.flip()
-            pygame.time.delay(100 + i * 5)  # Gradually slow down the spin
+            window.present()
+            wait_with_events(100 + i * 5, player)  # Gradually slow down the spin
 
         return results
 
@@ -211,9 +212,9 @@ def slots(player):
             screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
             input_box.w = max(input_box_width, txt_surface.get_width() + 10)
 
-            pygame.display.flip()
+            window.present()
 
-            for event in pygame.event.get():
+            for event in window.get_events():
                 if event.type == pygame.QUIT:
                     player.save_progress()
                     pygame.quit()
@@ -247,7 +248,7 @@ def slots(player):
     ui_clock = pygame.time.Clock()
     while running:
         ui_clock.tick(60)
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 running = False
@@ -267,7 +268,7 @@ def slots(player):
                     message = "Insufficient Funds!"
 
         draw_slot_machine(results, message)
-        pygame.display.flip()
+        window.present()
 
     pygame.quit()
     sys.exit()

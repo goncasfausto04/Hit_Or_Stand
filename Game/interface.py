@@ -1,3 +1,4 @@
+import window
 from game import game_loop
 import pygame
 from utils import *  # no need to import pygame because the import is in utils
@@ -14,7 +15,7 @@ def interface():
 
     while True:
         # Create the screen at the set resolution
-        screen = pygame.display.set_mode(config.resolution)
+        screen = window.get_screen()
 
         # Set fonts
         blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
@@ -55,10 +56,10 @@ def interface():
         ui_clock = pygame.time.Clock()
         while True:
             ui_clock.tick(60)
-            mouse = pygame.mouse.get_pos()  # Get mouse position
+            mouse = window.mouse_position()  # Get mouse position
 
             # Event detection
-            for event in pygame.event.get():
+            for event in window.get_events():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -87,28 +88,6 @@ def interface():
                     if button_clicked(0.25 - (0.125 / 2), 0.833, 0.125, 0.083, mouse):
                         chime_sound.play()
                         options()
-                        # Reinitialize the screen and other variables after returning from options
-                        screen = pygame.display.set_mode(config.resolution)
-                        blockyfont = pygame.font.Font(
-                            blockyfontpath, int(config.height * 0.07)
-                        )
-                        blockyfontsmall = pygame.font.Font(
-                            blockyfontpath, int(config.height * 0.035)
-                        )
-                        wilderness_text = blockyfont.render("Hit Or Stand", True, white)
-                        quit_text = blockyfontsmall.render("Quit", True, white)
-                        credits_text = blockyfontsmall.render("Credits", True, white)
-                        rules_text = blockyfontsmall.render("Tutorial", True, white)
-                        options_text = blockyfontsmall.render("Options", True, white)
-                        title_text = blockyfont.render(
-                            "Computation_3 Project!", True, glowing_yellow
-                        )
-                        background = pygame.image.load(background_path)
-                        background = pygame.transform.scale(
-                            background, config.resolution
-                        )
-                        break  # Exit the inner loop to reinitialize the screen
-
                     # Rules button
                     if button_clicked(0.25 - (0.125 / 2), 0.667, 0.125, 0.083, mouse):
                         chime_sound.play()
@@ -196,83 +175,56 @@ def interface():
             screen.blit(title_text, (config.width * 0.05, config.height * 0.02))
 
             # Update the screen
-            pygame.display.update()
+            window.present()
 
 
 def wilderness_explorer():
-    config.width, config.height = config.resolution[0], config.resolution[1]
     game_loop()
 
 
 def options():
     # Initialize the screen for options
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
 
     # Set fonts
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
     blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
 
-    # Load current resolution from save
-    save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand") if os.name == 'nt' else os.path.expanduser("~/.hitorstand")
-    save_location = os.path.join(save_dir, "player_progress.json")
-    try:
-        with open(save_location, "r") as file:
-            player_progress = json.load(file)
-            current_res = tuple(player_progress.get("resolution", config.RESOLUTIONS[0]))
-    except (FileNotFoundError, json.JSONDecodeError):
-        current_res = config.RESOLUTIONS[0]
-
     # Sound setup
     chime_path = os.path.join(base_path, "extras", "chime1.mp3")
     chime_sound = pygame.mixer.Sound(chime_path)
     volume_level = pygame.mixer.music.get_volume()
+    clock = pygame.time.Clock()
 
     while True:
-        mouse = pygame.mouse.get_pos()
+        clock.tick(60)
+        mouse = window.mouse_position()
         
         # Create text surfaces
-        current_res_text = f"Resolution: {config.resolution[0]}x{config.resolution[1]}"
-        resolution_text = blockyfontsmall.render(current_res_text, True, white)
+        size = pygame.display.get_window_size()
+        fullscreen_text = blockyfontsmall.render(
+            "Exit Fullscreen (F11)" if window.is_fullscreen() else "Fullscreen (F11)",
+            True, white,
+        )
+        size_text = blockyfontsmall.render(
+            f"Window: {size[0]} x {size[1]}", True, white
+        )
+        resize_text = blockyfontsmall.render("Drag the bottom-right corner to resize", True, white)
         volume_text = blockyfontsmall.render("Music Volume:", True, white)
         back_text = blockyfont.render("Back", True, white)
         reset_text = blockyfont.render("Reset Progress", True, white)
 
         # Event handling
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # Resolution button
                 if button_clicked(0.3, 0.3, 0.4, 0.1, mouse):
                     chime_sound.play()
-                    try:
-                        with open(save_location, "r") as file:
-                            player_progress = json.load(file)
-                    except (FileNotFoundError, json.JSONDecodeError):
-                        player_progress = {"resolution": list(config.RESOLUTIONS[0])}
-                    
-                    # Cycle through resolutions
-                    current_res = tuple(player_progress.get("resolution", config.RESOLUTIONS[0]))
-                    try:
-                        current_index = config.RESOLUTIONS.index(current_res)
-                    except ValueError:
-                        current_index = 0
-                    new_index = (current_index + 1) % len(config.RESOLUTIONS)
-                    new_res = config.RESOLUTIONS[new_index]
-                    
-                    # Save new resolution
-                    player_progress["resolution"] = list(new_res)
-                    with open(save_location, "w") as file:
-                        json.dump(player_progress, file)
-                    
-                    # Update config and screen
-                    config.resolution = new_res
-                    screen = pygame.display.set_mode(config.resolution)
-                    blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
-                    blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
+                    window.toggle_fullscreen()
 
                 # Volume control
                 volume_bar = pygame.Rect(
@@ -297,16 +249,19 @@ def options():
         # Draw everything
         screen.fill(deep_black)
 
-        # Resolution button
+        # Fullscreen button
         draw_buttonutils(
             dark_red,
             glowing_light_red,
             0.3, 0.3, 0.4, 0.1,
-            resolution_text,
+            fullscreen_text,
             blockyfontsmall,
             mouse,
             screen
         )
+
+        screen.blit(size_text, size_text.get_rect(center=(config.width * 0.5, config.height * 0.15)))
+        screen.blit(resize_text, resize_text.get_rect(center=(config.width * 0.5, config.height * 0.23)))
 
         # Volume control
         screen.blit(volume_text, (config.width * 0.1, config.height * 0.6))
@@ -344,4 +299,4 @@ def options():
             screen
         )
 
-        pygame.display.update()
+        window.present()

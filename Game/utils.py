@@ -1,3 +1,4 @@
+import window
 import pygame
 import os
 import cv2
@@ -32,18 +33,18 @@ def pause_game(screen, width, height,player):
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        draw_buttonutils(dark_red, red, 0.4, 0.6, 0.2, 0.1 ,main_menu, font1, pygame.mouse.get_pos(), screen)
-        for event in pygame.event.get():
+        draw_buttonutils(dark_red, red, 0.4, 0.6, 0.2, 0.1 ,main_menu, font1, window.mouse_position(), screen)
+        for event in window.get_events():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_clicked(0.4, 0.6, 0.2, 0.1, pygame.mouse.get_pos()):
+                if button_clicked(0.4, 0.6, 0.2, 0.1, window.mouse_position()):
                     player.save_progress()
                     return "menu"
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        pygame.display.flip()
+        window.present()
 
                 
 
@@ -61,7 +62,7 @@ def play_video(video_path, resolution, sound_path):
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     # Set up the Pygame window
-    screen = pygame.display.set_mode(resolution)
+    screen = window.get_screen()
     pygame.display.set_caption("Video Player")
 
     # Main loop
@@ -76,7 +77,7 @@ def play_video(video_path, resolution, sound_path):
 
     while running:
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -105,7 +106,7 @@ def play_video(video_path, resolution, sound_path):
 
         # Display the frame
         screen.blit(frame, (0, 0))
-        pygame.display.update()
+        window.present()
 
         # Control the frame rate
         clock.tick(fps)
@@ -202,13 +203,13 @@ def prompt(screen, width, height, content):
 
     # Draw the text on top of the box
     screen.blit(text, text_rect)
-    pygame.display.flip()
+    window.present()
 
     # Infinite loop until the user unpauses
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.KEYDOWN and (
                 event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN
             ):
@@ -219,6 +220,7 @@ def prompt(screen, width, height, content):
                 pygame.quit()
                 sys.exit()
                 exit()
+        window.present()
 
 
 def draw_text(screen, text, x, y, font, color=white, center=False):
@@ -303,10 +305,11 @@ def wait_with_events(milliseconds, player=None):
     deadline = pygame.time.get_ticks() + milliseconds
     clock = pygame.time.Clock()
     while pygame.time.get_ticks() < deadline:
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 if player is not None:
                     player.save_progress()
                 pygame.quit()
                 sys.exit()
+        window.present()
         clock.tick(60)

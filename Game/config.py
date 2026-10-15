@@ -25,17 +25,10 @@ white = (254, 255, 255)
 deep_black = (19, 20, 20)
 pink = (255, 105, 180)
 
-# SCREEN RESOLUTION
+# Logical game size. The resizable window scales this view without changing physics.
 resolution = (1280, 720)
 width, height = resolution[0], resolution[1]
 fps = 60
-
-# config.py
-RESOLUTIONS = [
-    (1280, 720),
-    (1600, 900),
-    (1920, 1080)
-]
 
 # pet type
 pet_image = "dog_pet_comp.png"

@@ -1,3 +1,4 @@
+import window
 
 import pygame
 from utils import *  # no need to import pygame because the import is in utils
@@ -10,7 +11,7 @@ from pet import Pet
 
 def shop(player):
     # Create the screen at the set resolution
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
 
     # Set fonts
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
@@ -32,10 +33,10 @@ def shop(player):
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        mouse = pygame.mouse.get_pos()  # Get mouse position
+        mouse = window.mouse_position()  # Get mouse position
 
         # Event detection
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -101,12 +102,12 @@ def shop(player):
         )
 
         # Update the screen
-        pygame.display.update()
+        window.present()
 
 
 def weapons_shop(player):
     pygame.init()
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(
         blockyfontpath, int(config.height * 0.035)
@@ -127,9 +128,9 @@ def weapons_shop(player):
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        mouse = pygame.mouse.get_pos()
+        mouse = window.mouse_position()
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -225,7 +226,7 @@ def weapons_shop(player):
                 screen,
             )
 
-        pygame.display.update()
+        window.present()
 
 
 def no_money_messaege(screen):
@@ -238,13 +239,13 @@ def no_money_messaege(screen):
     text_rect = text.get_rect(center=(config.width // 2, config.height // 2))
 
     screen.blit(text, text_rect)
-    pygame.display.flip()
+    window.present()
     wait_with_events(1250)
 
 
 def pet_shop(player):
     pygame.init()
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(
         blockyfontpath, int(config.height * 0.035)
@@ -264,9 +265,9 @@ def pet_shop(player):
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        mouse = pygame.mouse.get_pos()
+        mouse = window.mouse_position()
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -359,4 +360,4 @@ def pet_shop(player):
                 screen,
             )
 
-        pygame.display.update()
+        window.present()

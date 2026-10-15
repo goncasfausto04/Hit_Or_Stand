@@ -1,3 +1,4 @@
+import window
 import pygame
 import os
 from utils import *
@@ -7,7 +8,7 @@ import sys
 def credits_():
     """Displays the credits screen of the game."""
 
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
 
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
@@ -37,8 +38,8 @@ def credits_():
     ui_clock = pygame.time.Clock()
     while True:
         ui_clock.tick(60)
-        mouse = pygame.mouse.get_pos()
-        for event in pygame.event.get():
+        mouse = window.mouse_position()
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -84,4 +85,4 @@ def credits_():
             screen,
         )
 
-        pygame.display.update()
+        window.present()

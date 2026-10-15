@@ -1,3 +1,4 @@
+import window
 import pygame
 from config import *
 from utils import *
@@ -45,7 +46,7 @@ def shed(player, pet, spawn_location):
 
     # setting up the screen
     background = pygame.transform.scale(background, config.resolution)
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     hud = HUD(screen, config, player)
 
     clock = pygame.time.Clock()
@@ -149,7 +150,7 @@ def shed(player, pet, spawn_location):
         player.change_bullet_type(keys)
 
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -159,4 +160,4 @@ def shed(player, pet, spawn_location):
                 if pause_game(screen, config.width, config.height, player) == "menu":
                     return "menu"
 
-        pygame.display.flip()
+        window.present()

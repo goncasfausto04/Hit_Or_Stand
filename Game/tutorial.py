@@ -1,3 +1,4 @@
+import window
 import pygame
 import os
 import config
@@ -26,7 +27,7 @@ def tutorial():
     background_path = os.path.join(base_path, "extras", "shedbg.png")
     background = pygame.image.load(background_path)
     background = pygame.transform.scale(background, config.resolution)
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     clock = pygame.time.Clock()
 
     blockyfont = pygame.font.Font(os.path.join(base_path, "extras", "Pixeboy.ttf"), 32)
@@ -149,7 +150,7 @@ def tutorial():
         # draw the special area
         pygame.draw.rect(screen, (0, 255, 0), special_area, 2)
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -207,7 +208,7 @@ def tutorial():
             playertutorial.rect.left = config.width - playertutorial.rect.width
             return battle()
 
-        pygame.display.flip()
+        window.present()
 
 
 def battle():
@@ -223,7 +224,7 @@ def battle():
     background_path = os.path.join(base_path, "extras", "battleground.png")
     background = pygame.image.load(background_path)
     background = pygame.transform.scale(background, config.resolution)
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     clock = pygame.time.Clock()
 
     blockyfont = pygame.font.Font(os.path.join(base_path, "extras", "Pixeboy.ttf"), 32)
@@ -299,7 +300,7 @@ def battle():
             run_frames = True
             dead_enemy = False
 
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -389,6 +390,6 @@ def battle():
                 "Good Luck! Press ESC to exit.",
             )
 
-        pygame.display.flip()
+        window.present()
 
     return

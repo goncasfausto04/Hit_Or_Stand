@@ -1,3 +1,4 @@
+import window
 import pygame
 import os
 import random
@@ -66,10 +67,10 @@ def execute_game(player, pet):
     background = pygame.image.load(background_path)
     background = pygame.transform.scale(background, config.resolution)
     clock = pygame.time.Clock()
-    screen = pygame.display.set_mode(config.resolution)
+    screen = window.get_screen()
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
-    mouse = pygame.mouse.get_pos()  # Get mouse position
+    mouse = window.mouse_position()  # Get mouse position
     pygame.display.set_caption("Hit or Stand")
     hud = HUD(screen, config, player)
     
@@ -156,7 +157,7 @@ def execute_game(player, pet):
         seconds = total_seconds % 60  # Calculate seconds
         time = minutes * 60 + seconds  # Calculate total time in seconds
         # Handle events
-        for event in pygame.event.get():
+        for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
@@ -430,7 +431,7 @@ def execute_game(player, pet):
             ui_clock = pygame.time.Clock()
             while dead:
                 ui_clock.tick(60)
-                mouse = pygame.mouse.get_pos()
+                mouse = window.mouse_position()
 
                 draw_buttonutils(
                     dark_red,
@@ -445,8 +446,8 @@ def execute_game(player, pet):
                     screen,
                 )
 
-                pygame.display.flip()
-                for event in pygame.event.get():
+                window.present()
+                for event in window.get_events():
                     if event.type == pygame.QUIT:
                         player.save_progress()
                         pygame.quit()
@@ -464,7 +465,7 @@ def execute_game(player, pet):
             ui_clock = pygame.time.Clock()
             while out:
                 ui_clock.tick(60)
-                mouse = pygame.mouse.get_pos()
+                mouse = window.mouse_position()
                 draw_buttonutils(
                     dark_green,
                     (0, 255, 0),
@@ -489,9 +490,9 @@ def execute_game(player, pet):
                     mouse,
                     screen,
                 )
-                pygame.display.flip()
+                window.present()
 
-                for event in pygame.event.get():
+                for event in window.get_events():
                     if event.type == pygame.QUIT:
                         player.save_progress()
                         pygame.quit()
@@ -512,4 +513,4 @@ def execute_game(player, pet):
                             return "shed"
 
         draw_fps(screen, clock)
-        pygame.display.flip()
+        window.present()
