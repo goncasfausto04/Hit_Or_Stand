@@ -29,7 +29,9 @@ def shop(player):
     background = pygame.transform.scale(background, config.resolution)
 
     # Main loop
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         mouse = pygame.mouse.get_pos()  # Get mouse position
 
         # Event detection
@@ -122,7 +124,9 @@ def weapons_shop(player):
         "Astral Beam": 4000,
     }
 
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         mouse = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
@@ -233,11 +237,9 @@ def no_money_messaege(screen):
     text = font.render("Not enough money", True, (255, 255, 255))
     text_rect = text.get_rect(center=(config.width // 2, config.height // 2))
 
-    # Display the message for 120 frames
-    for _ in range(75):
-        screen.blit(text, text_rect)
-        pygame.display.flip()
-        pygame.time.delay(int(1000 / 60))  # Delay to maintain 60 FPS
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+    wait_with_events(1250)
 
 
 def pet_shop(player):
@@ -259,7 +261,9 @@ def pet_shop(player):
         "Crab": 600,
     }
 
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         mouse = pygame.mouse.get_pos()
 
         for event in pygame.event.get():

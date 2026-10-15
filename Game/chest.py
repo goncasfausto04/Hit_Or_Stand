@@ -5,6 +5,7 @@ import os
 from config import *
 from player import Player
 import sys
+from utils import wait_with_events
 
 
 class TreasureChest(pygame.sprite.Sprite):
@@ -85,14 +86,16 @@ class TreasureChest(pygame.sprite.Sprite):
         running = True
         last_loop = True
 
+        ui_clock = pygame.time.Clock()
         while running or last_loop:
+            ui_clock.tick(60)
             # Clear screen
             self.draw_cards(screen)
             pygame.display.flip()
 
             if running == False and last_loop == True:
                 last_loop = False
-                pygame.time.wait(1500)
+                wait_with_events(1500, player)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

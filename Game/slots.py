@@ -171,7 +171,9 @@ def slots(player):
         )
         input_text = ""
 
+        ui_clock = pygame.time.Clock()
         while typing:
+            ui_clock.tick(60)
 
             screen.fill(green)
 
@@ -242,7 +244,9 @@ def slots(player):
 
     set_bet()
 
+    ui_clock = pygame.time.Clock()
     while running:
+        ui_clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 player.save_progress()

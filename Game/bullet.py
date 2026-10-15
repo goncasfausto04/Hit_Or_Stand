@@ -16,6 +16,7 @@ class Bullet(pygame.sprite.Sprite):
         self.radius = bullet_size
         self.direction = direction
         self.speed = 7
+        self._velocity_key = None
         # updating the x and y position to fit the circles
         self.rect = pygame.Rect(
             x - self.radius, y - self.radius, self.radius * 2, self.radius * 2
@@ -25,8 +26,12 @@ class Bullet(pygame.sprite.Sprite):
 
         # updating the bullet's position based on the speed and the direction
         # (x, y) --> (cos, sin)
-        self.rect.x += int(self.speed * math.cos(self.direction))
-        self.rect.y += int(self.speed * math.sin(self.direction))
+        key = (self.speed, self.direction)
+        if key != self._velocity_key:
+            self._velocity_key = key
+            self._velocity = (int(self.speed * math.cos(self.direction)),
+                              int(self.speed * math.sin(self.direction)))
+        self.rect.move_ip(self._velocity)
 
         # killing the bullet if it goes off screen
         if (

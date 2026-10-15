@@ -5,6 +5,12 @@ from config import *
 import config
 import sys
 import json
+from functools import lru_cache
+
+
+@lru_cache(maxsize=1)
+def fps_font():
+    return pygame.font.Font(None, 25)
 
 
 def pause_game(screen, width, height,player):
@@ -21,10 +27,11 @@ def pause_game(screen, width, height,player):
     # Display the 'Paused' message
     screen.blit(text, text_rect)
 
-    import interface
 
     # Infinite loop until the user unpauses
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         draw_buttonutils(dark_red, red, 0.4, 0.6, 0.2, 0.1 ,main_menu, font1, pygame.mouse.get_pos(), screen)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -32,7 +39,7 @@ def pause_game(screen, width, height,player):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_clicked(0.4, 0.6, 0.2, 0.1, pygame.mouse.get_pos()):
                     player.save_progress()
-                    interface.interface()
+                    return "menu"
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -198,7 +205,9 @@ def prompt(screen, width, height, content):
     pygame.display.flip()
 
     # Infinite loop until the user unpauses
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and (
                 event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN
@@ -283,7 +292,21 @@ def reset_progress():
 
 def draw_fps(screen, clock):
     """Draw the FPS (frames per second) on the screen."""
-    font=pygame.font.Font(None, 25)
+    font = fps_font()
     fps = int(clock.get_fps())
     draw_text(screen, f"FPS: {fps}", 2, config.height*0.97, font, white)
 
+
+
+def wait_with_events(milliseconds, player=None):
+    """Keep the window responsive while displaying a timed message."""
+    deadline = pygame.time.get_ticks() + milliseconds
+    clock = pygame.time.Clock()
+    while pygame.time.get_ticks() < deadline:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if player is not None:
+                    player.save_progress()
+                pygame.quit()
+                sys.exit()
+        clock.tick(60)

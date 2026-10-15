@@ -9,6 +9,8 @@ class HUD:
         self.screen = screen
         self.config = config
         self.player = player
+        self._text_cache = {}
+        self._bar_cache = {}
 
         # Fonts using screen percentage
         self.font_small = pygame.font.Font(None, int(config.height * 0.028))
@@ -66,7 +68,12 @@ class HUD:
     def draw_text(self, text, font, color, x_ratio, y_ratio, center=False):
         x = x_ratio * self.config.width
         y = y_ratio * self.config.height
-        surface = font.render(text, True, color)
+        key = (font, x_ratio, y_ratio, center)
+        cached = self._text_cache.get(key)
+        if cached is None or cached[:2] != (text, color):
+            cached = (text, color, font.render(text, True, color))
+            self._text_cache[key] = cached
+        surface = cached[2]
         rect = surface.get_rect(center=(x, y) if center else (x, y))
         self.screen.blit(surface, rect.topleft)
 
@@ -178,11 +185,13 @@ class HUD:
 
 
     def draw_transparent_bar(self, x_ratio, y_ratio, width_ratio, height_ratio, color, alpha):
-        s = pygame.Surface((
-            int(width_ratio * self.config.width), 
-            int(height_ratio * self.config.height)
-        ), pygame.SRCALPHA)
-        s.fill((*color, alpha))
+        key = (int(width_ratio * self.config.width),
+               int(height_ratio * self.config.height), tuple(color), alpha)
+        if key not in self._bar_cache:
+            s = pygame.Surface(key[:2], pygame.SRCALPHA)
+            s.fill((*color, alpha))
+            self._bar_cache[key] = s
+        s = self._bar_cache[key]
         self.screen.blit(s, (
             x_ratio * self.config.width,
             y_ratio * self.config.height

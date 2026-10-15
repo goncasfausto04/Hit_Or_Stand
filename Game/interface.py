@@ -52,7 +52,9 @@ def interface():
         pygame.display.set_caption("Hit Or Stand")
 
         # Main loop
+        ui_clock = pygame.time.Clock()
         while True:
+            ui_clock.tick(60)
             mouse = pygame.mouse.get_pos()  # Get mouse position
 
             # Event detection
@@ -77,6 +79,9 @@ def interface():
                     if button_clicked(0.125, 0.333, 0.75, 0.083, mouse):
                         chime2_sound.play()
                         wilderness_explorer()
+                        pygame.mixer.music.load(music_path)
+                        pygame.mixer.music.play(-1)
+                        pygame.mixer.music.set_volume(config.music_volume)
 
                     # Options button
                     if button_clicked(0.25 - (0.125 / 2), 0.833, 0.125, 0.083, mouse):

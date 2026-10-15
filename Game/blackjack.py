@@ -1,6 +1,6 @@
 import pygame
 import random
-import time
+from utils import wait_with_events
 import os
 from config import *
 from player import Player
@@ -127,7 +127,9 @@ def blackjack(player):
         )
         input_text = ""
 
+        ui_clock = pygame.time.Clock()
         while typing:
+            ui_clock.tick(60)
 
             screen.fill(green)
 
@@ -237,7 +239,7 @@ def blackjack(player):
         if game_over_message:
             draw_text(game_over_message, WIDTH // 2 - 200, HEIGHT // 2 - 50)
             pygame.display.flip()
-            time.sleep(2)
+            wait_with_events(2000, player)
             set_bet()
             deck, player_hand, dealer_hand, player_stands = restart_game()
             game_over_message = None

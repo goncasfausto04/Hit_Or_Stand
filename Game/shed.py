@@ -7,6 +7,33 @@ from casino import *
 from hud import HUD
 
 
+def lake_collision_rects(resolution):
+    """Match the stepped shoreline in the 800 by 528 safe-zone artwork."""
+    width, height = resolution
+    shoreline = ((242, 34, 124, 27), (242, 61, 92, 48), (242, 109, 75, 17))
+    rects = []
+    for x, y, w, h in shoreline:
+        left, top = int(x * width / 800), int(y * height / 528)
+        right = round((x + w) * width / 800)
+        bottom = round((y + h) * height / 528)
+        rects.append(pygame.Rect(left, top, right - left, bottom - top))
+    return rects
+
+
+def resolve_lake_movement(rect, previous_rect, obstacles):
+    """Sweep each axis to block walking/dashing through water and allow sliding."""
+    target = rect.topleft
+    rect.topleft = previous_rect.topleft
+    for axis, destination in zip(("x", "y"), target):
+        distance = destination - getattr(rect, axis)
+        direction = 1 if distance > 0 else -1
+        for _ in range(abs(distance)):
+            setattr(rect, axis, getattr(rect, axis) + direction)
+            if any(rect.colliderect(obstacle) for obstacle in obstacles):
+                setattr(rect, axis, getattr(rect, axis) - direction)
+                break
+
+
 def shed(player, pet, spawn_location):
 
     # setting up the background and the screen
@@ -76,25 +103,9 @@ def shed(player, pet, spawn_location):
             config.width * 0.08,
             config.height * 0.15,
         ),
-        pygame.Rect(
-            config.width * 0.305,
-            config.height * 0.07,
-            config.width * 0.09,
-            config.height * 0.16,
-        ),
-        pygame.Rect(
-            config.width * 0.355,
-            config.height * 0.07,
-            config.width * 0.06,
-            config.height * 0.13,
-        ),
-        pygame.Rect(
-            config.width * 0.395,
-            config.height * 0.07,
-            config.width * 0.06,
-            config.height * 0.04,
-        ),
     ]
+
+    lake_rects = lake_collision_rects(config.resolution)
 
     running = True
 
@@ -105,7 +116,9 @@ def shed(player, pet, spawn_location):
         screen.blit(background, (0, 0))
 
         # Update the player and pet groups
+        previous_rect = player.rect.copy()
         player_group.update()
+        resolve_lake_movement(player.rect, previous_rect, lake_rects)
         pet_group.update()
         draw_fps(screen, clock)
         frame_counter += 1
@@ -143,6 +156,7 @@ def shed(player, pet, spawn_location):
                 sys.exit()
                 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pause_game(screen, config.width, config.height,player)
+                if pause_game(screen, config.width, config.height, player) == "menu":
+                    return "menu"
 
         pygame.display.flip()

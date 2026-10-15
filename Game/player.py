@@ -4,6 +4,14 @@ import pygame
 import math
 from bullet import *
 import json
+from functools import lru_cache
+
+
+@lru_cache(maxsize=32)
+def glow_image(radius, color):
+    image = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+    pygame.draw.circle(image, color, (radius, radius), radius)
+    return image
 
 
 # making Player a child of the Sprite class
@@ -262,12 +270,7 @@ class Player(pygame.sprite.Sprite):
             self.bullet_type = "Astral Beam"
 
     def glow(self, surface, radius, color):
-        # Create a surface for the glow
-        glow_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-
-        # Draw concentric circles with decreasing opacity
-        for i in range(radius, 0, -1):
-            pygame.draw.circle(glow_surface, color, (radius, radius), i)
+        glow_surface = glow_image(radius, tuple(color))
 
         # Blit the glow onto the main surface at the player's center
         surface.blit(

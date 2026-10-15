@@ -28,7 +28,11 @@ def game_loop():
     pygame.mixer.music.play(-1)  # Loop the soundtrack indefinitely
 
 
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
+        if current_state == "menu":
+            return
         if current_state == "main":
             current_state = execute_game(player, pet)
         elif current_state == "initial":
@@ -122,6 +126,27 @@ def execute_game(player, pet):
         )
 
 
+    enemy_types = [
+        initialEnemy,
+        fastEnemy,
+        TankMonster,
+        RangedMonster,
+        DuplicateMonster,
+    ]
+    spawn_configs = [
+        (60, [70, 20, 10, 0, 0], 1, 2),
+        (120, [50, 30, 15, 5, 0], 1, 1.8),
+        (180, [40, 30, 20, 10, 5], 2, 1.5),
+        (240, [30, 30, 25, 15, 5], 2, 1.3),
+        (300, [25, 25, 30, 20, 10], 3, 1.1),
+        (360, [20, 25, 30, 25, 15], 3, 1),
+        (420, [20, 20, 30, 30, 20], 4, 1),
+        (480, [15, 15, 35, 35, 20], 4, 1),
+        (540, [10, 10, 40, 40, 25], 4, 1),
+        (float("inf"), [5, 5, 45, 45, 35], 5, 0.8),
+    ]
+
+
     while running:
 
         clock.tick(fps)
@@ -130,10 +155,6 @@ def execute_game(player, pet):
         minutes = total_seconds // 60  # Calculate minutes
         seconds = total_seconds % 60  # Calculate seconds
         time = minutes * 60 + seconds  # Calculate total time in seconds
-        timer_text = font.render(
-            f"Time: {minutes:02}:{seconds:02}", True, white
-        )  # Format MM:SS
-
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -142,16 +163,16 @@ def execute_game(player, pet):
                 sys.exit()
 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pause_game(screen, config.width, config.height,player)
-                current_state = "menu"
+                if pause_game(screen, config.width, config.height, player) == "menu":
+                    return "menu"
 
         # Handle changing bullet type (check for 1, 2, or 3 key press)
         keys = pygame.key.get_pressed()
         player.change_bullet_type(keys)
 
         # Update game logic
-        pet_group.update()  # Update the pet's position
         abspowerups_group.update()
+        pet_group.update()  # Update the pet's position
         player_group.update()
         bullets.update()
         enemies.update(player)
@@ -273,9 +294,7 @@ def execute_game(player, pet):
             abspowerups_group.add(powerup6)
             health_drop_spawn_time = 0
             health_drop_spawn_interval = random.randint(fps * 30, fps * 60)
-        abspowerups_group.update()
 
-        abspowerups_group.update()
         # Check for collisions between player and power-ups
         collected_powerups = pygame.sprite.spritecollide(
             player, abspowerups_group, True
@@ -321,26 +340,6 @@ def execute_game(player, pet):
         if player.health_drop == True:
             player.health = min(player.health + 20, player.max_health)
             player.health_drop = False
-
-        enemy_types = [
-            initialEnemy,
-            fastEnemy,
-            TankMonster,
-            RangedMonster,
-            DuplicateMonster,
-        ]
-        spawn_configs = [
-            (60, [70, 20, 10, 0, 0], 1, 2),
-            (120, [50, 30, 15, 5, 0], 1, 1.8),
-            (180, [40, 30, 20, 10, 5], 2, 1.5),
-            (240, [30, 30, 25, 15, 5], 2, 1.3),
-            (300, [25, 25, 30, 20, 10], 3, 1.1),
-            (360, [20, 25, 30, 25, 15], 3, 1),
-            (420, [20, 20, 30, 30, 20], 4, 1),
-            (480, [15, 15, 35, 35, 20], 4, 1),
-            (540, [10, 10, 40, 40, 25], 4, 1),
-            (float("inf"), [5, 5, 45, 45, 35], 5, 0.8),
-        ]
 
         if enemy_cooldown <= 0:
             for max_time, weights, num_spawn, cooldown_factor in spawn_configs:
@@ -428,7 +427,9 @@ def execute_game(player, pet):
             dead = True
             dead_text = blockyfont.render("Respawn?", True, white)
 
+            ui_clock = pygame.time.Clock()
             while dead:
+                ui_clock.tick(60)
                 mouse = pygame.mouse.get_pos()
 
                 draw_buttonutils(
@@ -460,7 +461,9 @@ def execute_game(player, pet):
 
         if player.rect.right >= config.width:
             out = True
+            ui_clock = pygame.time.Clock()
             while out:
+                ui_clock.tick(60)
                 mouse = pygame.mouse.get_pos()
                 draw_buttonutils(
                     dark_green,

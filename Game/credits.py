@@ -34,7 +34,9 @@ def credits_():
 
     body_text = "This game was developed as a project for the course of Computation 3, we hope you envjoy the gameplay as much we enjoyed to develop it!"
 
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         mouse = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

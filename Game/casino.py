@@ -32,7 +32,9 @@ def casino(player):
     background = pygame.transform.scale(background, config.resolution)
 
     # Main loop
+    ui_clock = pygame.time.Clock()
     while True:
+        ui_clock.tick(60)
         mouse = pygame.mouse.get_pos()  # Get mouse position
 
         # Event detection

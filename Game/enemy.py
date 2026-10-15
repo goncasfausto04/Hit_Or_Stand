@@ -4,6 +4,7 @@ import random
 import math
 import config
 from bullet import enemy_bullet
+from assets import load_image
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -57,7 +58,7 @@ class initialEnemy(Enemy):
         self.sprites = []
         for i in range(0, 5):
             self.sprites.append(
-                pygame.image.load(os.path.join(sprite_path, f"tile00{i}.png"))
+                load_image(os.path.join(sprite_path, f"tile00{i}.png"))
             )
 
         self.image = self.sprites[self.frame_count]
@@ -90,10 +91,7 @@ class fastEnemy(Enemy):
 
         self.sprites = []
         for i in range(0, 4):
-            image = pygame.image.load(os.path.join(sprite_path, f"slime-move-{i}.png"))
-            scaled_image = pygame.transform.scale(
-                image, (enemy_size[0] * 2, enemy_size[1] * 2)
-            )  # Set new_width and new_height to desired dimensions
+            scaled_image = load_image(os.path.join(sprite_path, f"slime-move-{i}.png"), (enemy_size[0] * 2, enemy_size[1] * 2))  # Set new_width and new_height to desired dimensions
             self.sprites.append(scaled_image)
 
         self.image = self.sprites[self.frame_count]
@@ -126,10 +124,7 @@ class TankMonster(Enemy):
 
         self.sprites = []
         for i in range(0, 8):
-            image = pygame.image.load(os.path.join(sprite_path, f"tile00{i}.png"))
-            scaled_image = pygame.transform.scale(
-                image, (enemy_size[0] * 4.5, enemy_size[1] * 3)
-            )
+            scaled_image = load_image(os.path.join(sprite_path, f"tile00{i}.png"), (enemy_size[0] * 4.5, enemy_size[1] * 3))
             self.sprites.append(scaled_image)
 
         self.image = self.sprites[self.frame_count]
@@ -169,10 +164,7 @@ class RangedMonster(Enemy):
 
         self.sprites = []
         for i in range(0, 4):
-            image = pygame.image.load(os.path.join(sprite_path, f"tile00{i}.png"))
-            scaled_image = pygame.transform.scale(
-                image, (enemy_size[0] * 2, enemy_size[1] * 2)
-            )
+            scaled_image = load_image(os.path.join(sprite_path, f"tile00{i}.png"), (enemy_size[0] * 2, enemy_size[1] * 2))
             self.sprites.append(scaled_image)
 
         self.image = self.sprites[self.frame_count]
@@ -222,10 +214,7 @@ class DuplicateMonster(Enemy):
 
         self.sprites = []
         for i in range(0, 5):
-            image = pygame.image.load(os.path.join(sprite_path, f"tile00{i}.png"))
-            scaled_image = pygame.transform.scale(
-                image, (enemy_size[0] * 2.5, enemy_size[1] * 2.5)
-            )  # Set new_width and new_height to desired dimensions
+            scaled_image = load_image(os.path.join(sprite_path, f"tile00{i}.png"), (enemy_size[0] * 2.5, enemy_size[1] * 2.5))  # Set new_width and new_height to desired dimensions
             self.sprites.append(scaled_image)
 
         self.image = self.sprites[self.frame_count]
