@@ -40,6 +40,13 @@ or %APPDATA%\.hitorstand\player_progress.json on Windows. Options > Reset Progre
 resets gameplay progress while keeping your window and audio preferences.
 The virtual environment is independent of saved game progress.
 
+Windows builds from Linux
+
+Push your changes, open Actions > Build Windows EXE > Run workflow on GitHub.
+GitHub builds the game on a Windows runner using Python 3.12. When the run is
+green, open it and download HitOrStand-Windows from Artifacts. Extract the ZIP
+and attach HitOrStand.exe to your GitHub Release. Python is not needed to play.
+
 Development
 
 Game/main.spec is the reusable PyInstaller configuration. Run it from Game/.
