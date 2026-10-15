@@ -1,107 +1,52 @@
-import window
-import pygame
-from utils import *  # no need to import pygame because the import is in utils
-from config import *  # importing colors and the like
+"""Casino selection screen."""
 import os
-from game import *
-from player import Player
+import sys
+
+import pygame
+
+import config
+import window
+from assets import load_image
 from blackjack import blackjack
 from slots import slots
+from utils import button_clicked, draw_buttonutils
 
 
 def casino(player):
-
-    # Create the screen at the set resolution
     screen = window.get_screen()
-
-    # Set fonts
-    corbelfont = pygame.font.SysFont("Corbel", int(config.height * 0.07))
-    comicsansfont = pygame.font.SysFont("Comic Sans MS", int(config.height * 0.07))
-    blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-    blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.07))
-    blockyfontsmall = pygame.font.Font(blockyfontpath, int(config.height * 0.035))
-
-    # Render the text
-    slots_text = blockyfontsmall.render("Slot Machine", True, white)
-    blackjack_text = blockyfontsmall.render("BlackJack", True, white)
-    goback_text = blockyfontsmall.render("Go Back", True, white)
-    title_text = blockyfont.render("Shopping Street", True, glowing_light_red)
-
-    # Render background
-    background_path = os.path.join(base_path, "extras", "casinobg.png")
-    background = pygame.image.load(background_path)
-    background = pygame.transform.scale(background, config.resolution)
-
-    # Main loop
-    ui_clock = pygame.time.Clock()
+    font = pygame.font.Font(
+        os.path.join(config.base_path, "extras", "Pixeboy.ttf"),
+        int(config.height * 0.035),
+    )
+    background = load_image(
+        os.path.join(config.base_path, "extras", "casinobg.png"), config.resolution
+    )
+    buttons = (
+        ((0.125, 0.167, 0.125, 0.083), font.render("Slot Machine", True, config.white), slots),
+        ((0.125, 0.333, 0.125, 0.083), font.render("Blackjack", True, config.white), blackjack),
+        ((0.625, 0.833, 0.125, 0.083), font.render("Go Back", True, config.white), None),
+    )
+    clock = pygame.time.Clock()
     while True:
-        ui_clock.tick(60)
-        mouse = window.mouse_position()  # Get mouse position
-
-        # Event detection
+        clock.tick(60)
+        mouse = window.mouse_position()
         for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
                 pygame.quit()
                 sys.exit()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                # Skins button
-                if button_clicked(0.125, 0.167, 0.125, 0.083, mouse):
-                    slots(player)
-
-                # Weapons button
-                if button_clicked(0.125, 0.333, 0.125, 0.083, mouse):
-                    blackjack(player)
-
-                # Go back button
-                if button_clicked(0.625, 0.833, 0.125, 0.083, mouse):
-                    return "shedcasino"  # Exit the shop
-
-        # Fill the screen with background
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return "shedcasino"
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for bounds, _, action in buttons:
+                    if button_clicked(*bounds, event.pos):
+                        if action is None:
+                            return "shedcasino"
+                        action(player)
+                        break
         screen.blit(background, (0, 0))
-
-        # slots button
-        draw_buttonutils(
-            dark_red,
-            red,
-            0.125,
-            0.167,
-            0.125,
-            0.083,
-            slots_text,
-            blockyfontsmall,
-            mouse,
-            screen,
-        )
-
-        # blackjack button
-        draw_buttonutils(
-            dark_red,
-            red,
-            0.125,
-            0.333,
-            0.125,
-            0.083,
-            blackjack_text,
-            blockyfontsmall,
-            mouse,
-            screen,
-        )
-
-        # Go back button
-        draw_buttonutils(
-            dark_red,
-            red,
-            0.625,
-            0.833,
-            0.125,
-            0.083,
-            goback_text,
-            blockyfontsmall,
-            mouse,
-            screen,
-        )
-
-        # Update the screen
+        for bounds, label, _ in buttons:
+            draw_buttonutils(
+                config.dark_red, config.red, *bounds, label, font, mouse, screen
+            )
         window.present()

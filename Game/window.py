@@ -6,6 +6,8 @@ transforms. All scenes share the canvas, including across fullscreen changes.
 import pygame
 from pygame._sdl2.video import Window
 import config
+import cheats
+from progress import read_settings, save_settings
 
 _screen = None
 _display = None
@@ -16,11 +18,35 @@ _resize_drag = None
 _native_window = None
 _pending_size = None
 _cursor = None
+_settings_enabled = False
+_settings_path = None
+_initial_fullscreen = False
+_resize_finished = False
+
+
+def restore_preferences(path=None):
+    """Load once at startup; persistence stays opt-in for headless callers."""
+    global _settings_enabled, _settings_path, _windowed_size, _initial_fullscreen
+    preferences = read_settings(path)
+    _settings_path = path
+    _settings_enabled = True
+    _windowed_size = tuple(preferences["window_size"])
+    _initial_fullscreen = preferences["fullscreen"]
+    config.music_volume = preferences["music_volume"]
+    if pygame.mixer.get_init():
+        pygame.mixer.music.set_volume(config.music_volume)
+
+
+def save_preferences():
+    if _settings_enabled:
+        save_settings({"music_volume": config.music_volume,
+                       "fullscreen": _fullscreen,
+                       "window_size": list(_windowed_size)}, _settings_path)
 
 
 def get_screen():
     global _screen, _display, _fullscreen, _scaled_frame, _resize_drag
-    global _native_window, _pending_size, _cursor
+    global _native_window, _pending_size, _cursor, _initial_fullscreen
     if _screen is None or pygame.display.get_surface() is None:
         _display = pygame.display.set_mode(_windowed_size, 0)
         _native_window = Window.from_display_module()
@@ -31,6 +57,9 @@ def get_screen():
         _resize_drag = None
         _scaled_frame = None
         pygame.display.set_caption("Hit or Stand")
+        if _initial_fullscreen:
+            _initial_fullscreen = False
+            toggle_fullscreen(persist=False)
     return _screen
 
 
@@ -38,7 +67,7 @@ def is_fullscreen():
     return _fullscreen
 
 
-def toggle_fullscreen():
+def toggle_fullscreen(persist=True):
     """Change only the native display; scene references to the canvas stay valid."""
     global _display, _fullscreen, _windowed_size, _scaled_frame, _resize_drag
     global _native_window, _pending_size
@@ -64,6 +93,8 @@ def toggle_fullscreen():
         _display = pygame.display.get_surface()
     _fullscreen = target_fullscreen
     _scaled_frame = None
+    if persist:
+        save_preferences()
     return True
 
 
@@ -94,7 +125,7 @@ def resize_window(size):
 
 def handle_corner_drag(event):
     """Track raw window pixels before converting pointer events for the game."""
-    global _resize_drag, _pending_size
+    global _resize_drag, _pending_size, _resize_finished
     if _fullscreen:
         return False
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -103,6 +134,7 @@ def handle_corner_drag(event):
             return True
     if _resize_drag is not None:
         if event.type == pygame.WINDOWFOCUSLOST:
+            _resize_finished = True
             _resize_drag = None
             _pending_size = None
         elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
@@ -113,6 +145,7 @@ def handle_corner_drag(event):
                              size[1] + event.pos[1] - start[1])
             if event.type == pygame.MOUSEBUTTONUP:
                 _resize_drag = None
+                _resize_finished = True
             return True
     return False
 
@@ -178,9 +211,10 @@ def present():
 
 def get_events():
     """Handle global shortcuts and translate pointer events to game coordinates."""
-    global _pending_size
+    global _pending_size, _resize_finished
     events = []
     for event in pygame.event.get():
+        cheats.process_event(event)
         if event.type == pygame.KEYDOWN and (
             event.key == pygame.K_F11
             or (event.key == pygame.K_RETURN and getattr(event, "mod", 0) & pygame.KMOD_ALT)
@@ -202,5 +236,8 @@ def get_events():
     if _pending_size is not None:
         resize_window(_pending_size)
         _pending_size = None
+    if _resize_finished:
+        _resize_finished = False
+        save_preferences()
     update_cursor()
     return events

@@ -1,9 +1,8 @@
-# Config file used to set global variables and other settings
+"""Logical game dimensions, shared colors and default settings."""
 import os
 
 base_path = os.path.dirname(__file__)
 
-# COLORS
 black = (0, 0, 0)
 blue = (0, 0, 255)
 dark_green = (0, 100, 0)
@@ -13,10 +12,8 @@ green = (34, 139, 34)
 dark_red = (138, 0, 0)
 red = (150, 0, 24)
 grey = (59, 60, 60)
-dark_gray = (50, 50, 50)
 light_grey = (100, 100, 100)
 light_gray = (200, 200, 200)
-cute_purple = (128, 0, 128)
 glowing_light_red = (239, 128, 128)
 glowing_yellow = (255, 255, 0)
 yellow = (255, 255, 0)
@@ -25,30 +22,18 @@ white = (254, 255, 255)
 deep_black = (19, 20, 20)
 pink = (255, 105, 180)
 
-# Logical game size. The resizable window scales this view without changing physics.
+# Window scaling does not alter the simulation's coordinate system.
 resolution = (1280, 720)
-width, height = resolution[0], resolution[1]
+width, height = resolution
 fps = 60
 
-# pet type
 pet_image = "dog_pet_comp.png"
 pet_image_change = False
-
-# SIZES
-player_size = (int(width * 0.0475), int(width * 0.0475))  # Smaller player size
-enemy_size = (int(width * 0.025), int(height * 0.045))  # Smaller enemy size
-bullet_size = int(width * 0.006)  # Smaller bullet size
-powerup_size = (int(width * 0.025), int(height * 0.045))  # Smaller power-up size
-chest_size = (int(width * 0.03), int(height * 0.055))  # Smaller chest size
-
-# music volume
 music_volume = 0.2
-pet_size = (int(width * 0.035), int(height * 0.065))  # Smaller pet size
 
-# soundtrack list
-soundtrack1_path = os.path.join(base_path, "extras", "soundtrack1.mp3")
-soundtrack2_path = os.path.join(base_path, "extras", "soundtrack2.mp3")
-soundtrack3_path = os.path.join(base_path, "extras", "soundtrack3.mp3")
-soundtrack4_path = os.path.join(base_path, "extras", "soundtrack4.mp3")
-
-soundtrack = [soundtrack1_path, soundtrack2_path, soundtrack3_path, soundtrack4_path]
+player_size = (int(width * 0.0475), int(width * 0.0475))
+enemy_size = (int(width * 0.025), int(height * 0.045))
+bullet_size = int(width * 0.006)
+chest_size = (int(width * 0.03), int(height * 0.055))
+pet_size = (int(width * 0.035), int(height * 0.065))
+soundtrack = [os.path.join(base_path, "extras", f"soundtrack{i}.mp3") for i in range(1, 5)]

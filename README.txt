@@ -1,20 +1,50 @@
-Github used throught the project: https://github.com/goncasfausto04/project_comp
+Hit or Stand
 
-To run the game simply run main.py, watch out for the necessary requirements!
+A Pygame survival game with a safe house, weapon and pet upgrades, and casino minigames.
 
-For testing purposes you may switch some variables in the player_progression.json as a skill like the dash is luck based
-or some weapons that take a bit long to get in the monetary system implemeted, otherwise the game would be too easy.
+Setup (Python 3.12)
 
-Powerups also spawn randomly so you may alter the spawn rate if you wish in order to evaluate them more easily, to do so is 
-very simple in the game.py file altering the value powerupname_spawn_interval to your desired need
+Use Python 3.12 for the pinned dependencies. From the repository root, using uv:
 
-If you wish to reset your progress on the options there is a button that does so.
+    uv python install 3.12
+    uv venv --python 3.12 .venv312
+    uv pip install --python .venv312/bin/python -r requirements.txt
+    ./.venv312/bin/python Game/main.py
 
-NOTE: If you have problems running the game it may be due to numpy incopabilities, create a clean enviroment and everything should work fine!
+If Python 3.12 is already installed, the standard-library alternative is:
 
-Window controls:
-- Drag the bottom-right corner handle to resize proportionally. Side resizing is disabled.
-- Open Options and click Fullscreen, or press F11 / Alt+Enter on any screen.
-- Press the same shortcut to return to the previous window size.
-- Corner resizing keeps the window at 16:9.
-- The game and UI scale uniformly. Fullscreen uses black bars when needed to avoid stretching.
+    python3.12 -m venv .venv312
+    .venv312/bin/python -m pip install -r requirements.txt
+    .venv312/bin/python Game/main.py
+
+On Windows, use .venv312\Scripts\python.exe instead of .venv312/bin/python.
+In VS Code, select the virtual environment's Python interpreter and use Run Python File in Terminal.
+Fish activation is optional: source .venv312/bin/activate.fish
+
+Controls
+
+- WASD: move. Space: dash once unlocked. Number keys 1-5: select purchased weapons.
+- Weapons and the pet fire automatically in battle.
+- Escape: pause. The main menu includes a guided tutorial.
+- Drag the visible bottom-right corner handle to resize at 16:9; side resizing is disabled.
+- Options > Fullscreen, F11, or Alt+Enter toggles fullscreen.
+- Fullscreen preserves the artwork's proportions, adding black bars when needed.
+- Music volume, fullscreen and window size are saved automatically and restored at startup.
+- Type motherload anywhere (no Enter needed) to add 10,000 coins. The code is repeatable
+  and rewards are saved immediately.
+
+Progress
+
+Upgrades and records are stored in ~/.hitorstand/player_progress.json on Linux/macOS,
+or %APPDATA%\.hitorstand\player_progress.json on Windows. Options > Reset Progress
+resets gameplay progress while keeping your window and audio preferences.
+The virtual environment is independent of saved game progress.
+
+Development
+
+Game/main.spec is the reusable PyInstaller configuration. Run it from Game/.
+Build on Windows for HitOrStand.exe, or Linux for a Linux executable.
+Distribute compiled downloads through GitHub Releases. Executables, build/,
+dist/, virtual environments and caches stay excluded from the repository.
+
+Original project: https://github.com/goncasfausto04/project_comp

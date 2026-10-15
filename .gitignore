@@ -1,3 +1,47 @@
+# Local Python environments
+.venv*/
+venv/
+env/
 
-*.pyc
+# Python caches and test output
+__pycache__/
+*.py[cod]
+/tests/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
+# Generated packages and executables (keep Game/main.spec)
+build/
+dist/
+*.egg-info/
+*.exe
+
+# Local editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Local saves, secrets, logs and temporary files
+.hitorstand/
+player_progress.json
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+
+# Old project-model backups
+*.oob
+/Hit or Stand.oom

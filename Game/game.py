@@ -3,24 +3,35 @@ import pygame
 import os
 import random
 import config
-from utils import *
+from cheats import player_session
+from config import (fps, soundtrack, white, dark_red, dark_green, green_ish,
+                    glowing_light_red)
+from utils import pause_game, draw_buttonutils, button_clicked, draw_fps
+from assets import load_image
+from collisions import resolve_projectile_hits
 from player import Player
-from enemy import *
+from enemy import initialEnemy, fastEnemy, TankMonster, RangedMonster, DuplicateMonster
 from pet import Pet
 from shed import shed
 from shop import shop
 from chest import TreasureChest
-from abstractclasses import *
+from abstractclasses import (Invincibility, DeSpawner, Instakill,
+                             InvertedControls, Teleportation, Health_Drop)
 from hud import HUD
 import sys
+
+
+def _powerup_position():
+    """Keep collectible artwork within the playable area's margins."""
+    return (random.randint(50, config.width - 50),
+            random.randint(50, config.height - 70))
 
 
 # endless loop that will keep the game running
 def game_loop():
     # Initialize player and other game components
     player = Player()
-    bullets = pygame.sprite.Group()
-    pet = Pet(player, bullets)  # Pass bullets group to the Pet
+    pet = Pet(player)
     current_state = "initial"
 
     # Play soundtrack
@@ -30,47 +41,44 @@ def game_loop():
 
 
     ui_clock = pygame.time.Clock()
-    while True:
-        ui_clock.tick(60)
-        if current_state == "menu":
-            return
-        if current_state == "main":
-            current_state = execute_game(player, pet)
-        elif current_state == "initial":
-            current_state = shed(player, pet, (config.width * 0.5, config.height * 0.5))
-        elif current_state == "shed":
-            current_state = shed(
-                player, pet, ((config.width * 0.01), (config.height * 0.5))
-            )
-        elif current_state == "shop":
-            current_state = shop(player)
-        elif current_state == "shedshop":
-            current_state = shed(
-                player,
-                pet,
-                ((config.width - (config.width * 0.22)), (config.height * 0.25)),
-            )
-        elif current_state == "shedcasino":
-            current_state = shed(
-                player,
-                pet,
-                ((config.width - (config.width * 0.27)), (config.height * 0.65)),
-            )
+    with player_session(player):
+        while True:
+            ui_clock.tick(60)
+            if current_state == "menu":
+                return
+            if current_state == "main":
+                current_state = execute_game(player, pet)
+            elif current_state == "initial":
+                current_state = shed(player, pet, (config.width * 0.5, config.height * 0.5))
+            elif current_state == "shed":
+                current_state = shed(
+                    player, pet, ((config.width * 0.01), (config.height * 0.5))
+                )
+            elif current_state == "shop":
+                current_state = shop(player)
+            elif current_state == "shedshop":
+                current_state = shed(
+                    player,
+                    pet,
+                    ((config.width - (config.width * 0.22)), (config.height * 0.25)),
+                )
+            elif current_state == "shedcasino":
+                current_state = shed(
+                    player,
+                    pet,
+                    ((config.width - (config.width * 0.27)), (config.height * 0.65)),
+                )
 
 
 def execute_game(player, pet):
-
-    
-
+    player.reset_combat_state()
     base_path = os.path.dirname(__file__)
     background_path = os.path.join(base_path, "extras", "Battleground.png")
-    background = pygame.image.load(background_path)
-    background = pygame.transform.scale(background, config.resolution)
+    background = load_image(background_path, config.resolution)
     clock = pygame.time.Clock()
     screen = window.get_screen()
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     blockyfont = pygame.font.Font(blockyfontpath, int(config.height * 0.05))
-    mouse = window.mouse_position()  # Get mouse position
     pygame.display.set_caption("Hit or Stand")
     hud = HUD(screen, config, player)
     
@@ -86,7 +94,6 @@ def execute_game(player, pet):
     chests = pygame.sprite.Group()
 
     enemy_cooldown = 0
-    running = True
     abspowerups_group = pygame.sprite.Group()
     despawner_spawn_time = 0
     beforeinstakill = 0
@@ -108,6 +115,10 @@ def execute_game(player, pet):
     game_time_frames = 0  # Tracks elapsed time in seconds
     kills = 0  # Tracks the number of kills
     font = pygame.font.SysFont("Arial", 30)  # Font for rendering text
+    timer_text = font.render("Time: 00:00", True, white)
+    kills_text = font.render("Kills: 0", True, white)
+    previous_seconds = 0
+    previous_kills = 0
 
     damage_cooldown = 35  # Cooldown in frames (1 second at 60 FPS (if it was 60))
     player_cooldown = 0  # Tracks the remaining cooldown time for the player
@@ -148,14 +159,18 @@ def execute_game(player, pet):
     ]
 
 
-    while running:
+    while True:
 
         clock.tick(fps)
-        game_time_frames += 1  # Increment the timer based on frames
+        game_time_frames += 1
         total_seconds = game_time_frames // fps  # Convert frames to seconds
-        minutes = total_seconds // 60  # Calculate minutes
-        seconds = total_seconds % 60  # Calculate seconds
-        time = minutes * 60 + seconds  # Calculate total time in seconds
+        if total_seconds != previous_seconds:
+            minutes, seconds = divmod(total_seconds, 60)
+            timer_text = font.render(f"Time: {minutes:02}:{seconds:02}", True, white)
+            previous_seconds = total_seconds
+        if kills != previous_kills:
+            kills_text = font.render(f"Kills: {kills}", True, white)
+            previous_kills = kills
         # Handle events
         for event in window.get_events():
             if event.type == pygame.QUIT:
@@ -172,7 +187,6 @@ def execute_game(player, pet):
         player.change_bullet_type(keys)
 
         # Update game logic
-        abspowerups_group.update()
         pet_group.update()  # Update the pet's position
         player_group.update()
         bullets.update()
@@ -181,7 +195,6 @@ def execute_game(player, pet):
         # drawing the player and enemies sprites on the screen
         screen.blit(background, (0, 0))
         chests.draw(screen)
-        # draw_level_up_bar(screen, player)
         abspowerups_group.draw(screen)
         for bullet in bullets:
             bullet.draw(screen)
@@ -192,27 +205,16 @@ def execute_game(player, pet):
             enemy.draw(screen)  # Call the draw method for each enemy
         hud.draw()
 
-        timer_text = font.render(f"Time: {minutes:02}:{seconds:02}", True, white)
-        kills_text = font.render(f"Kills: {kills}", True, white)
         screen.blit(timer_text, (10, 10))  # Timer at top-left corner
         screen.blit(kills_text, (10, 40))  # Kill counter below timer
 
         player.shoot(bullets)
         pet.pet_shoot(bullets)  # Pet shoots bullets
 
-        def teleport_player(self):
-            # Generate random position within the screen bounds
-            new_x = random.randint(60, config.width - 60)
-            new_y = random.randint(60, config.height - 60)
-
-            # Update the player's position
-            self.rect.x = new_x
-            self.rect.y = new_y
-
         if player.exp >= player.exp_required:
             x = random.randint(50, config.width - 50)
             y = random.randint(50, config.height - 50)
-            if player.has_dash == True:
+            if player.has_dash:
                 chest = TreasureChest(x, y, player, ["100", "200", "300", "400", "500"])
             else:
                 chest = TreasureChest(
@@ -230,7 +232,7 @@ def execute_game(player, pet):
         # Detect collision and apply damage
         collided_enemies = pygame.sprite.spritecollide(player, enemies, False)
 
-        if collided_enemies and player_cooldown <= 0 and player.invincible == False:
+        if collided_enemies and player_cooldown <= 0 and not player.invincible:
             # Apply damage once for all collisions in the frame if player is not invincible
             total_damage = sum(enemy.damage for enemy in collided_enemies)
             player.health -= total_damage
@@ -241,20 +243,14 @@ def execute_game(player, pet):
 
         invencibility_spawn_time += 1  # change
         if invencibility_spawn_time >= invencibility_spawn_interval:
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = Invincibility
-            powerup1 = powerup_type(x, y)
-            abspowerups_group.add(powerup1)
+            abspowerups_group.add(Invincibility(*_powerup_position()))
             invencibility_spawn_time = 0
             invencibility_spawn_interval = random.randint(fps * 50, fps * 100)
 
 
         despawner_spawn_time += 1
         if despawner_spawn_time >= despawner_spawn_interval:
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = DeSpawner
-            powerup2 = DeSpawner(x, y)
-            abspowerups_group.add(powerup2)
+            abspowerups_group.add(DeSpawner(*_powerup_position()))
             despawner_spawn_time = 0
             despawner_spawn_interval = random.randint(fps * 30, fps * 70)
 
@@ -262,37 +258,25 @@ def execute_game(player, pet):
 
         oneshot_spawn_time += 1  # change
         if oneshot_spawn_time >= oneshot_spawn_interval:  # Spawn a power-up every 5 seconds
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = Instakill
-            powerup3 = powerup_type(x, y)
-            abspowerups_group.add(powerup3)
+            abspowerups_group.add(Instakill(*_powerup_position()))
             oneshot_spawn_time = 0
             oneshot_spawn_interval = random.randint(fps * 25, fps * 50)
 
 
         reverse_spawn_time += 1  # change
         if reverse_spawn_time >= reverse_spawn_interval:
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = InvertedControls
-            powerup4 = powerup_type(x, y)
-            abspowerups_group.add(powerup4)
+            abspowerups_group.add(InvertedControls(*_powerup_position()))
             reverse_spawn_time = 0
 
         teleport_spawn_time += 1
         if teleport_spawn_time >= teleport_spawn_interval:  # Spawn a power-up every 5 seconds
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = Teleportation
-            powerup5 = powerup_type(x, y)
-            abspowerups_group.add(powerup5)
+            abspowerups_group.add(Teleportation(*_powerup_position()))
             teleport_spawn_time = 0
             teleport_spawn_interval = random.randint(fps * 30, fps * 70)
 
         health_drop_spawn_time += 1
         if health_drop_spawn_time >= health_drop_spawn_interval:
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = Health_Drop
-            powerup6 = powerup_type(x, y)
-            abspowerups_group.add(powerup6)
+            abspowerups_group.add(Health_Drop(*_powerup_position()))
             health_drop_spawn_time = 0
             health_drop_spawn_interval = random.randint(fps * 30, fps * 60)
 
@@ -304,41 +288,44 @@ def execute_game(player, pet):
         
         if player.rect.colliderect(colission_rect1):
             player.rect.y -= 5
-        #pygame.draw.rect(screen, (0, 0, 0), colission_rect1)
 
         if player.rect.colliderect(colission_rect2):
             player.rect.x += 5
-        #pygame.draw.rect(screen, (0, 0, 0), colission_rect2)
 
 
  
         for powerup in collected_powerups:
             powerup.affect_player(player)
             powerup.affect_game(enemies)
+            if isinstance(powerup, Invincibility):
+                invencibility_time = 5 * fps
+            elif isinstance(powerup, InvertedControls):
+                reverse_time = 2 * fps
 
-        if invencibility_time > 0 and player.invincible == True:
+        if invencibility_time > 0 and player.invincible:
             invencibility_time -= 1
             player.glow(screen, radius=60, color=(0, 20, 0, 50))
         if invencibility_time <= 0:
             player.invincible = False
             invencibility_time = 300
-        if player.oneshotkill == True:
+        if player.oneshotkill:
             beforeinstakill = kills
             player.glow(screen, radius=60, color=(0, 0, 200, 50))
-        if reverse_time > 0 and player.inverted == True:
+        if reverse_time > 0 and player.inverted:
             reverse_time -= 1
             player.glow(screen, radius=60, color=(0, 100, 100, 50))
         if reverse_time <= 0:
             player.inverted = False
             reverse_time = 120
-        if player.de_spawner_active == True:
+        if player.de_spawner_active:
             player.glow(screen, radius=60, color=(255, 0, 0, 50))
 
-        if player.teleport == True:
-            teleport_player(player)
+        if player.teleport:
+            player.rect.topleft = (random.randint(60, config.width - 60),
+                                    random.randint(60, config.height - 60))
             player.teleport = False
 
-        if player.health_drop == True:
+        if player.health_drop:
             player.health = min(player.health + 20, player.max_health)
             player.health_drop = False
 
@@ -351,64 +338,22 @@ def execute_game(player, pet):
                     break
 
             for _ in range(num_enemies_to_spawn):
-                if player.de_spawner_active == False:
+                if not player.de_spawner_active or random.randint(1, 100) <= 75:
                     enemy_type = random.choices(
                         enemy_types, weights=spawn_weights, k=1
                     )[0]
                     new_enemy = enemy_type()
                     enemies.add(new_enemy)
-                elif (
-                    player.de_spawner_active == True
-                ):  # now when despawner is activated enemies only have 75% chance of spawning
-                    if random.randint(1, 100) <= 75:
-                        enemy_type = random.choices(
-                            enemy_types, weights=spawn_weights, k=1
-                        )[0]
-                        new_enemy = enemy_type()
-                        enemies.add(new_enemy)
 
         enemy_cooldown -= 1
 
         for enemy in enemies:
-            if isinstance(
-                enemy, RangedMonster
-            ):  # Check if the enemy is a RangedMonster
-                enemy.enemy_shoot(bullets)  # Call the shoot method
+            if isinstance(enemy, RangedMonster):
+                enemy.enemy_shoot(bullets)
 
-        # updating positions and visuals
-
-        if player.powerup_active:  # If the player is invincible
-            collided_enemies = pygame.sprite.spritecollide(player, enemies, True)
-
-        # Handle collisions
-        for bullet in bullets:
-            # Verificar se a bala é de um inimigo
-            if getattr(
-                bullet, "is_enemy_bullet", False
-            ):  # Verifica se é uma bala inimiga
-                # Detectar colisão com o jogador
-                if player.rect.colliderect(bullet.rect):
-                    if player.invincible == False:
-                        player.health -= bullet.damage
-                    bullet.kill()  # Remove a bala após a colisão
-            else:
-                # Verificar colisão com todos os inimigos
-                for enemy in enemies:
-                    if enemy.rect.colliderect(bullet.rect):
-                        if player.oneshotkill == True:
-                            enemy.health -= bullet.damage * 100000  # Aplica dano no inimigo que os mata automaticamente
-                            bullet.kill()  # Remove a bala após a colisão
-                        else:
-                            enemy.health -= bullet.damage  # Aplica dano no inimigo
-                            bullet.kill()  # Remove a bala após a colisão
-                        if enemy.health <= 0:
-                            if isinstance(enemy, DuplicateMonster):
-                                enemy.spawn_on_death(enemies)  # Spawn new enemies
-                            enemy.kill()
-                            kills += 1
-                            player.exp += 1
-                        # Se a vida do inimigo chegar a 0, ele morre
-                        break  # Sai do loop interno após processar o inimigo atual
+        frame_kills = resolve_projectile_hits(player, bullets, enemies)
+        kills += frame_kills
+        player.exp += frame_kills
 
         if beforeinstakill < kills:
             player.oneshotkill = False
@@ -419,10 +364,10 @@ def execute_game(player, pet):
 
         # kill player
 
-        if player.health <= 0:
+        if player.health <= 0 and not player.dead:
             player.death()
-            if time > player.best_time:
-                player.best_time = time
+            if total_seconds > player.best_time:
+                player.best_time = total_seconds
 
         if player.dead:
             dead = True
@@ -453,11 +398,15 @@ def execute_game(player, pet):
                         pygame.quit()
                         sys.exit()
 
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        mouse = event.pos
                         if button_clicked(
                             0.5 - (0.125 / 2), 0.5 - (0.125 / 2), 0.125, 0.125, mouse
                         ):
                             player.dead = False
+                            player.dying = False
+                            player.health = player.max_health
+                            player.reset_combat_state()
                             return "initial"
 
         if player.rect.right >= config.width:
@@ -498,7 +447,8 @@ def execute_game(player, pet):
                         pygame.quit()
                         sys.exit()
 
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        mouse = event.pos
                         if button_clicked(
                             0.4 - (0.125 / 2), 0.5 - (0.083 / 2), 0.125, 0.083, mouse
                         ):
@@ -507,9 +457,10 @@ def execute_game(player, pet):
                         elif button_clicked(
                             0.6 - (0.125 / 2), 0.5 - (0.083 / 2), 0.125, 0.083, mouse
                         ):
-                            player.health = 100
-                            if player.best_time < time:
-                                player.best_time = time
+                            player.health = player.max_health
+                            player.reset_combat_state()
+                            if player.best_time < total_seconds:
+                                player.best_time = total_seconds
                             return "shed"
 
         draw_fps(screen, clock)

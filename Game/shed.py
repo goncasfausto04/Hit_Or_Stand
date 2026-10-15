@@ -1,10 +1,13 @@
 import window
 import pygame
-from config import *
-from utils import *
+import config
+from config import base_path, fps
+from utils import draw_fps, handle_collision, pause_game
+from assets import load_image
+import sys
 import os
-from shop import *
-from casino import *
+from shop import shop
+from casino import casino
 from hud import HUD
 
 
@@ -37,23 +40,15 @@ def resolve_lake_movement(rect, previous_rect, obstacles):
 
 def shed(player, pet, spawn_location):
 
-    # setting up the background and the screen
-    background_path = os.path.join(base_path, "extras", "shedbg.png")
-    # scalling the background image into our selected resolution
-    background = pygame.image.load(background_path)
-    frame_counter = 0
-
-
-    # setting up the screen
-    background = pygame.transform.scale(background, config.resolution)
+    background = load_image(os.path.join(base_path, "extras", "shedbg.png"), config.resolution)
     screen = window.get_screen()
     hud = HUD(screen, config, player)
 
     clock = pygame.time.Clock()
 
     # set up spawn location
-    player.rect.left = spawn_location[0]
-    pet.rect.left = spawn_location[0] + 50  # Pet starts to the right of the player
+    player.rect.topleft = spawn_location
+    pet.rect.topleft = (player.rect.x + 50, player.rect.y + 50)
 
     # creating the player group and adding the player to it
     player_group = pygame.sprite.Group()
@@ -122,7 +117,6 @@ def shed(player, pet, spawn_location):
         resolve_lake_movement(player.rect, previous_rect, lake_rects)
         pet_group.update()
         draw_fps(screen, clock)
-        frame_counter += 1
 
         
         # Check if the player collides with the special area

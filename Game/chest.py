@@ -3,8 +3,8 @@ import random
 import pygame
 import config
 import os
-from config import *
-from player import Player
+from config import base_path, chest_size
+from assets import load_image
 import sys
 from utils import wait_with_events
 
@@ -21,18 +21,11 @@ class TreasureChest(pygame.sprite.Sprite):
         self.flipped_cards = [False, False, False]
         # Load the chest image
         image_path = os.path.join(base_path, "extras", "chest.png")
-        self.image = pygame.image.load(image_path).convert_alpha()
-        self.image = pygame.transform.scale(
-            self.image, chest_size
-        )  # Scale to desired size
-        self.player = player
-
-        # Load the card image
-        card_path = os.path.join(base_path, "extras", "card.png")
-        self.card_image = pygame.image.load(card_path).convert_alpha()
-        self.card_image = pygame.transform.scale(
-            self.card_image, (100, 150)
-        )  # Scale to desired size
+        self.image = load_image(image_path, chest_size)
+        self.card_image = load_image(os.path.join(base_path, "extras", "card.png"), (100, 150))
+        self.font = pygame.font.Font(None, 36)
+        self.reward_surfaces = [self.font.render(card, True, (0, 0, 0)) for card in self.cards]
+        self.coins_surface = self.font.render("Coins", True, (0, 0, 0))
 
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -62,9 +55,8 @@ class TreasureChest(pygame.sprite.Sprite):
                 pygame.draw.rect(
                     screen, (255, 255, 255), (*self.card_positions[i], *self.card_size)
                 )
-                font = pygame.font.Font(None, 36)
-                text_surface = font.render(self.cards[i], True, (0, 0, 0))
-                coins_surface = font.render("Coins", True, (0, 0, 0))
+                text_surface = self.reward_surfaces[i]
+                coins_surface = self.coins_surface
                 text_rect = text_surface.get_rect(
                     center=(
                         self.card_positions[i][0] + 50,
@@ -94,7 +86,7 @@ class TreasureChest(pygame.sprite.Sprite):
             self.draw_cards(screen)
             window.present()
 
-            if running == False and last_loop == True:
+            if not running and last_loop:
                 last_loop = False
                 wait_with_events(1500, player)
 
@@ -103,8 +95,8 @@ class TreasureChest(pygame.sprite.Sprite):
                     player.save_progress()
                     pygame.quit()
                     sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = window.mouse_position()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_pos = event.pos
                     for i, pos in enumerate(self.card_positions):
                         card_rect = pygame.Rect(*pos, *self.card_size)
                         if (

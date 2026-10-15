@@ -1,274 +1,100 @@
-import window
-import pygame
+"""Slot machine with pre-rendered background, reels and static labels."""
+import os
 import random
-from config import *
-from player import Player
+import sys
+
+import pygame
+
 import config
-from utils import *
+import window
+from ui import TextCache, prompt_bet
+from utils import wait_with_events
+
+
+def _gradient(size, top, bottom):
+    surface = pygame.Surface(size).convert()
+    width, height = size
+    for y in range(height):
+        blend = y / max(1, height - 1)
+        color = tuple(round(start + (end - start) * blend) for start, end in zip(top, bottom))
+        pygame.draw.line(surface, color, (0, y), (width - 1, y))
+    return surface
 
 
 def slots(player):
-
-    # Screen settings (16:9 aspect ratio)
-    WIDTH = config.resolution[0]
-    HEIGHT = config.resolution[1]
+    width, height = config.resolution
     screen = window.get_screen()
     pygame.display.set_caption("Slot Machine")
+    font_path = os.path.join(config.base_path, "extras", "Pixeboy.ttf")
+    font = pygame.font.Font(font_path, int(width * 0.04))
+    small_font = pygame.font.Font(font_path, int(width * 0.03))
+    text = TextCache(font)
+    small_text = TextCache(small_font)
+    slot_size = (100, 100)
+    slot_x = [width // 4 - 50, width // 2 - 50, 3 * width // 4 - 50]
+    slot_y = height // 2 - 50
+    symbols = (config.red, config.green, config.blue)
+    reels = {color: _gradient(slot_size, config.light_gray, color) for color in (*symbols, config.white)}
+    for surface in reels.values():
+        pygame.draw.rect(surface, config.black, surface.get_rect(), 5)
 
-    # Slot settings
-    SLOT_WIDTH, SLOT_HEIGHT = 100, 100  # Smaller slots
-    SLOTS_X = [
-        WIDTH // 4 - SLOT_WIDTH // 2,
-        WIDTH // 2 - SLOT_WIDTH // 2,
-        3 * WIDTH // 4 - SLOT_WIDTH // 2,
-    ]
-    SLOTS_Y = HEIGHT // 2 - SLOT_HEIGHT // 2
-    symbols = [red, green, blue]
+    background = _gradient(config.resolution, config.dark_green, config.olive_green)
+    backing_rect = pygame.Rect(slot_x[0] - 20, slot_y - 20, slot_x[-1] + 140 - slot_x[0], 140)
+    pygame.draw.rect(background, config.light_grey, backing_rect)
+    pygame.draw.rect(background, config.black, backing_rect, 5)
+    for x in slot_x:
+        pygame.draw.rect(background, config.black, (x + 5, slot_y + 5, *slot_size))
+    for label, y in (("Press SPACE to Spin!", slot_y - height * 0.1), ("Press Esc to go back", height - 50)):
+        surface = text.render(label)
+        outline = text.render(label, config.black)
+        x = width // 2 - surface.get_width() // 2
+        for dx, dy in ((-1, -1), (-1, 1), (1, -1), (1, 1)):
+            background.blit(outline, (x + dx, y + dy))
+        background.blit(surface, (x, y))
 
-    # Font for messages
-    font_size = int(WIDTH * 0.04)  # 6% of the screen width
-    money_font_size = int(WIDTH * 0.045)  # 4.5% of the screen width
-    blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
-    font = pygame.font.Font(blockyfontpath, font_size)
-    money_font = pygame.font.Font(blockyfontpath, font_size)
-
-    FONT = pygame.font.Font(blockyfontpath, int(WIDTH * 0.04))
-    SMALL_FONT = pygame.font.Font(blockyfontpath, int(WIDTH * 0.03))
-
-    def draw_gradient_rect(surface, rect, color1, color2):
-        """Draws a rectangle with a vertical gradient."""
-        x, y, width, height = rect
-        for i in range(height):
-            blend = i / height
-            r = color1[0] + (color2[0] - color1[0]) * blend
-            g = color1[1] + (color2[1] - color1[1]) * blend
-            b = color1[2] + (color2[2] - color1[2]) * blend
-            pygame.draw.line(
-                surface, (int(r), int(g), int(b)), (x, y + i), (x + width, y + i)
-            )
-
-    def draw_gradient_background(surface, color1, color2):
-        """Draws a vertical gradient background."""
-        for i in range(HEIGHT):
-            blend = i / HEIGHT
-            r = color1[0] + (color2[0] - color1[0]) * blend
-            g = color1[1] + (color2[1] - color1[1]) * blend
-            b = color1[2] + (color2[2] - color1[2]) * blend
-            pygame.draw.line(surface, (int(r), int(g), int(b)), (0, i), (WIDTH, i))
-
-    def draw_text_with_outline(surface, text, font, color, outline_color, x, y):
-        """Draws text with an outline."""
-        text_surface = font.render(text, True, color)
-        outline_surface = font.render(text, True, outline_color)
-        for dx in [-1, 1]:
-            for dy in [-1, 1]:
-                surface.blit(outline_surface, (x + dx, y + dy))
-        surface.blit(text_surface, (x, y))
+    bet = prompt_bet(screen, player, small_font)
+    if bet is None:
+        return "shedcasino"
+    bet_surface = small_text.render(f"Bet: ${bet}", config.gold)
 
     def draw_slot_machine(results, message=None):
-        """Draws the slot machine with the results and optional message."""
-        draw_gradient_background(screen, dark_green, olive_green)
-
-        # Calculate the width of the background rectangle dynamically
-        total_width = SLOTS_X[-1] + SLOT_WIDTH - SLOTS_X[0] + 40  # 40 for padding
-        background_rect = (
-            SLOTS_X[0] - 20,
-            SLOTS_Y - 20,
-            total_width,
-            SLOT_HEIGHT + 40,
-        )  # Padding around all three slots
-
-        # Draw a single white background rectangle behind all three slots
-        pygame.draw.rect(screen, light_grey, background_rect)
-
-        # Draw a border around the white rectangle
-        pygame.draw.rect(screen, black, background_rect, 5)  # Border thickness of 5
-
-        # Draw slots with shadows and borders
-        for i, color in enumerate(results):
-            shadow_rect = (SLOTS_X[i] + 5, SLOTS_Y + 5, SLOT_WIDTH, SLOT_HEIGHT)
-            pygame.draw.rect(screen, black, shadow_rect)
-            draw_gradient_rect(
-                screen,
-                (SLOTS_X[i], SLOTS_Y, SLOT_WIDTH, SLOT_HEIGHT),
-                light_gray,
-                color,
-            )
-            pygame.draw.rect(
-                screen, black, (SLOTS_X[i], SLOTS_Y, SLOT_WIDTH, SLOT_HEIGHT), 5
-            )
-
-        # Display instructions with outline
-        text = "Press SPACE to Spin!"
-        text_x = WIDTH // 2 - font.render(text, True, white).get_width() // 2
-        text_y = SLOTS_Y - HEIGHT * 0.1  # Adjusted to be closer to the slots
-        back_text = "Press Esc to go back"
-        draw_text_with_outline(screen, text, font, white, black, text_x, text_y)
-        draw_text_with_outline(
-            screen,
-            back_text,
-            font,
-            white,
-            black,
-            WIDTH // 2 - font.render(back_text, True, white).get_width() // 2,
-            HEIGHT - 50,
-        )
-        draw_text(f"Bet: ${bet}", WIDTH * 0.039, HEIGHT * 0.1, SMALL_FONT, gold)
-
-        # Display win/lose message if present
+        screen.blit(background, (0, 0))
+        for x, color in zip(slot_x, results):
+            screen.blit(reels[color], (x, slot_y))
+        screen.blit(bet_surface, (width * 0.039, height * 0.1))
         if message:
-            message_text = font.render(message, True, white)
-            screen.blit(
-                message_text, (WIDTH // 2 - message_text.get_width() // 2, HEIGHT - 100)
-            )
+            message_surface = text.render(message)
+            screen.blit(message_surface, message_surface.get_rect(midtop=(width // 2, height - 100)))
+        screen.blit(text.render(f"Money: ${player.coins}"), (20, 20))
 
-        # Display player's money
-        money_text = money_font.render(f"Money: ${player.coins}", True, white)
-        screen.blit(money_text, (20, 20))
-
-    def spin_slots():
-        """Animates the spinning slots and returns the final results."""
-        results = [white, white, white]
-
-        for i in range(15):  # Fewer frames for quicker spins
-            results = [random.choice(symbols) for _ in range(3)]
-            draw_slot_machine(results)
-            window.present()
-            wait_with_events(100 + i * 5, player)  # Gradually slow down the spin
-
-        return results
-
-    def check_results(results):
-        """Checks if all three slots have the same color for a win."""
-        if results[0] == results[1] == results[2]:
-            return "You Win!"
-        else:
-            return "You Lose!"
-
-    def draw_text(text, x, y, font=FONT, color=white, center=False):
-        """Draws text on the screen, with optional centering."""
-        label = font.render(text, True, color)
-        if center:
-            x -= label.get_width() // 2  # Adjust x to center the text
-        screen.blit(label, (x, y))
-
-    running = True
-    results = [white, white, white]
+    results = [config.white] * 3
     message = None
-
-    bet = 0
-
-    def set_bet():
-        nonlocal bet
-        bet = 0
-        typing = True
-        input_box_width = 200
-        input_box_height = 40
-        input_box = pygame.Rect(
-            WIDTH // 2 - input_box_width // 2,
-            HEIGHT // 2 - input_box_height // 2,
-            input_box_width,
-            input_box_height,
-        )
-        input_text = ""
-
-        ui_clock = pygame.time.Clock()
-        while typing:
-            ui_clock.tick(60)
-
-            screen.fill(green)
-
-            # Display available money
-            draw_text(
-                f"Available Money: ${player.coins}",
-                WIDTH // 2,
-                HEIGHT // 2 - 100,
-                SMALL_FONT,
-                gold,
-                True,
-            )
-            draw_text(
-                "Set your bet:", WIDTH // 2, HEIGHT // 2 - 50, SMALL_FONT, white, True
-            )
-            draw_text(
-                "Press Enter to Confirm",
-                WIDTH // 2,
-                HEIGHT // 2 + 50,
-                SMALL_FONT,
-                white,
-                True,
-            )
-            draw_text(
-                "Type 0 to play just for fun",
-                WIDTH // 2,
-                HEIGHT // 2 + 100,
-                SMALL_FONT,
-                white,
-                True,
-            )
-
-            pygame.draw.rect(screen, white, input_box)
-            txt_surface = SMALL_FONT.render(input_text, True, black)
-            screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
-            input_box.w = max(input_box_width, txt_surface.get_width() + 10)
-
-            window.present()
-
-            for event in window.get_events():
-                if event.type == pygame.QUIT:
-                    player.save_progress()
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        if input_text.isdigit() and int(input_text) <= player.coins:
-                            bet = int(input_text)
-                            typing = False
-                        else:
-                            draw_text(
-                                "Invalid Bet! Must be a number within available funds.",
-                                WIDTH // 2 - 220,
-                                HEIGHT // 2 + 70,
-                                SMALL_FONT,
-                                red,
-                                True,
-                            )
-                    elif event.key == pygame.K_BACKSPACE:
-                        input_text = input_text[:-1]
-                    elif event.key == pygame.K_ESCAPE:
-                        typing = (
-                            False  # Exit the bet input screen without setting a bet.
-                        )
-                        return
-                    else:
-                        input_text += event.unicode
-
-    set_bet()
-
-    ui_clock = pygame.time.Clock()
-    while running:
-        ui_clock.tick(60)
+    clock = pygame.time.Clock()
+    while True:
+        clock.tick(60)
         for event in window.get_events():
             if event.type == pygame.QUIT:
                 player.save_progress()
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and player.coins >= bet:
-                    results = spin_slots()
-                    message = check_results(results)
-                    if message == "You Win!":
-                        player.coins += bet * 3
-                    else:
-                        player.coins -= bet
-
-                elif event.key == pygame.K_ESCAPE:
-                    return "shedcasino"
-
-                else:
-                    message = "Insufficient Funds!"
+                pygame.quit()
+                sys.exit()
+            if event.type != pygame.KEYDOWN:
+                continue
+            if event.key == pygame.K_ESCAPE:
+                return "shedcasino"
+            if event.key != pygame.K_SPACE:
+                continue
+            if player.coins < bet:
+                message = "Insufficient Funds!"
+                continue
+            for frame in range(15):
+                results = [random.choice(symbols) for _ in range(3)]
+                draw_slot_machine(results)
+                window.present()
+                wait_with_events(100 + frame * 5, player)
+            won = results[0] == results[1] == results[2]
+            message = "You Win!" if won else "You Lose!"
+            player.coins += bet * 3 if won else -bet
+            player.save_progress()
 
         draw_slot_machine(results, message)
         window.present()
-
-    pygame.quit()
-    sys.exit()

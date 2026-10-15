@@ -3,8 +3,8 @@ import pygame
 import random
 from utils import wait_with_events
 import os
-from config import *
-from player import Player
+from config import base_path, black, gold, green, red, white
+from ui import TextCache, prompt_bet
 import config
 import sys
 
@@ -19,6 +19,7 @@ def blackjack(player):
     blockyfontpath = os.path.join(base_path, "extras", "Pixeboy.ttf")
     FONT = pygame.font.Font(blockyfontpath, int(WIDTH * 0.04))
     SMALL_FONT = pygame.font.Font(blockyfontpath, int(WIDTH * 0.03))
+    renderers = {FONT: TextCache(FONT), SMALL_FONT: TextCache(SMALL_FONT)}
 
     SUITS = ["Spades", "Hearts", "Diamonds", "Clubs"]
     SUIT_COLORS = {"Spades": black, "Clubs": black, "Hearts": red, "Diamonds": red}
@@ -31,13 +32,13 @@ def blackjack(player):
 
     def draw_text(text, x, y, font=FONT, color=white, center=False):
         """Draws text on the screen, with optional centering."""
-        label = font.render(text, True, color)
+        label = renderers[font].render(text, color)
         if center:
             x -= label.get_width() // 2  # Adjust x to center the text
         screen.blit(label, (x, y))
 
     def get_card_value(card):
-        if card["rank"] in ["J", "Q", "K"]:
+        if card["rank"] in ("J", "Q", "K"):
             return 10
         elif card["rank"] == "A":
             return 11
@@ -61,7 +62,7 @@ def blackjack(player):
         card_rect = pygame.Rect(x, y, card_width, card_height)
         pygame.draw.rect(screen, white, card_rect)
         pygame.draw.rect(screen, black, card_rect, 2)
-        rank_text = SMALL_FONT.render(card["rank"], True, black)
+        rank_text = renderers[SMALL_FONT].render(card["rank"], black)
         suit_color = SUIT_COLORS[card["suit"]]
         pygame.draw.circle(
             screen,
@@ -110,97 +111,11 @@ def blackjack(player):
         player_stands = False
         return deck, player_hand, dealer_hand, player_stands
 
+    bet = prompt_bet(screen, player, SMALL_FONT)
+    if bet is None:
+        return
     deck, player_hand, dealer_hand, player_stands = restart_game()
     game_over_message = None
-    bet = 0
-
-    def set_bet():
-        nonlocal bet
-        bet = 0
-        typing = True
-        input_box_width = 200
-        input_box_height = 40
-        input_box = pygame.Rect(
-            WIDTH // 2 - input_box_width // 2,
-            HEIGHT // 2 - input_box_height // 2,
-            input_box_width,
-            input_box_height,
-        )
-        input_text = ""
-
-        ui_clock = pygame.time.Clock()
-        while typing:
-            ui_clock.tick(60)
-
-            screen.fill(green)
-
-            # Display available money
-            draw_text(
-                f"Available Money: ${player.coins}",
-                WIDTH // 2,
-                HEIGHT // 2 - 100,
-                SMALL_FONT,
-                gold,
-                True,
-            )
-            draw_text(
-                "Set your bet:", WIDTH // 2, HEIGHT // 2 - 50, SMALL_FONT, white, True
-            )
-            draw_text(
-                "Press Enter to Confirm",
-                WIDTH // 2,
-                HEIGHT // 2 + 50,
-                SMALL_FONT,
-                white,
-                True,
-            )
-            draw_text(
-                "Type 0 to play just for fun",
-                WIDTH // 2,
-                HEIGHT // 2 + 100,
-                SMALL_FONT,
-                white,
-                True,
-            )
-
-            pygame.draw.rect(screen, white, input_box)
-            txt_surface = SMALL_FONT.render(input_text, True, black)
-            screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
-            input_box.w = max(input_box_width, txt_surface.get_width() + 10)
-
-            window.present()
-
-            for event in window.get_events():
-                if event.type == pygame.QUIT:
-                    player.save_progress()
-                    pygame.quit()
-                    sys.exit()
-                    
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        if input_text.isdigit() and int(input_text) <= player.coins:
-                            bet = int(input_text)
-                            typing = False
-                        else:
-                            draw_text(
-                                "Invalid Bet! Must be a number within available funds.",
-                                WIDTH // 2 - 220,
-                                HEIGHT // 2 + 70,
-                                SMALL_FONT,
-                                red,
-                                True,
-                            )
-                    elif event.key == pygame.K_BACKSPACE:
-                        input_text = input_text[:-1]
-                    elif event.key == pygame.K_ESCAPE:
-                        typing = (
-                            False  # Exit the bet input screen without setting a bet.
-                        )
-                        return
-                    else:
-                        input_text += event.unicode
-
-    set_bet()
 
     while running:
         screen.fill(green)
@@ -241,7 +156,10 @@ def blackjack(player):
             draw_text(game_over_message, WIDTH // 2 - 200, HEIGHT // 2 - 50)
             window.present()
             wait_with_events(2000, player)
-            set_bet()
+            player.save_progress()
+            bet = prompt_bet(screen, player, SMALL_FONT)
+            if bet is None:
+                return
             deck, player_hand, dealer_hand, player_stands = restart_game()
             game_over_message = None
 
@@ -251,9 +169,9 @@ def blackjack(player):
                 running = False
 
             if event.type == pygame.KEYDOWN and not game_over_message:
-                if event.key == pygame.K_h:
+                if event.key == pygame.K_h and not player_stands:
                     player_hand.append(deal_card(deck))
-                elif event.key == pygame.K_s:
+                elif event.key == pygame.K_s and not player_stands:
                     player_stands = True
                     while calculate_hand_value(dealer_hand) < 17:
                         dealer_hand.append(deal_card(deck))

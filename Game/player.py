@@ -1,10 +1,13 @@
-from utils import *
-from config import *
-import pygame
-import math
-from bullet import *
-import json
+"""Player movement, animation, weapons and persistent upgrades."""
 from functools import lru_cache
+import math
+import os
+import pygame
+import config
+from config import base_path, player_size, fps, width, height, red, green
+from assets import load_image
+from bullet import pistol, shotgun, machinegun, bouncing, sniper
+from progress import DEFAULT_PROGRESS, read_progress, save_path, write_progress
 
 
 @lru_cache(maxsize=32)
@@ -14,15 +17,11 @@ def glow_image(radius, color):
     return image
 
 
-# making Player a child of the Sprite class
 class Player(pygame.sprite.Sprite):
 
     def __init__(self):
-        # calling the mother class init
         super().__init__()
 
-        # VISUAL VARIABLES
-        # we call surface to represent the player image
         sprites_path_idle = os.path.join(base_path, "extras", "sprite", "idle")
         sprites_path_run = os.path.join(base_path, "extras", "sprite", "run")
         sprites_path_dead = os.path.join(base_path, "extras", "sprite", "die")
@@ -35,37 +34,31 @@ class Player(pygame.sprite.Sprite):
         self.sprites_idle = []
         for i in range(0, 9):
             path = os.path.join(sprites_path_idle, f"Idle__00{i}.png")
-            image = pygame.image.load(path)
-            self.sprites_idle.append(pygame.transform.scale(image, (player_size)))
+            self.sprites_idle.append(load_image(path, player_size))
 
         self.sprites_run = []
         for i in range(0, 7):
             path = os.path.join(sprites_path_run, f"Run__00{i}.png")
-            image = pygame.image.load(path)
-            self.sprites_run.append(
-                pygame.transform.scale(image, (player_size[0], player_size[1]))
-            )
+            self.sprites_run.append(load_image(path, player_size))
 
         self.sprites_dead = []
         for i in range(0, 8):
             path = os.path.join(sprites_path_dead, f"die__00{i}.png")
-            image = pygame.image.load(path)
-            self.sprites_dead.append(
-                pygame.transform.scale(image, (player_size[0], player_size[1]))
-            )
+            self.sprites_dead.append(load_image(path, player_size))
 
-        self.curernt_sprite_idle = 0
-        self.curernt_sprite_run = 0
-        self.curernt_sprite_dead = 0
+        self.sprites_run_left = [pygame.transform.flip(image, True, False) for image in self.sprites_run]
 
-        self.image = self.sprites_idle[self.curernt_sprite_idle]
+        self.current_sprite_idle = 0
+        self.current_sprite_run = 0
+        self.current_sprite_dead = 0
+
+        self.image = self.sprites_idle[self.current_sprite_idle]
         self.rect = self.image.get_rect()
         self.rect.center = (width // 2, height // 2)
 
         self.rect.height = self.rect.height * 0.9
         self.rect.width = self.rect.width * 0.8
 
-        # GAMEPLAY VARIABLES
         self.speed = 5
         self.health = 100
         self.max_health = 100
@@ -80,15 +73,11 @@ class Player(pygame.sprite.Sprite):
         }  # Cooldown in frames
 
         self.coins = 0
-        self.powerup_active = False
-        self.powerup_timer = 0
         self.level = 1
         self.exp = 0
-        self.spawn_rate_multiplier = 1.0  # Default spawn rate multiplier
         self.de_spawner_active = False
         self.de_spawner_timer = 5 * fps
         self.invincible = False
-        self.spawn_rate_multiplier = 1
         self.oneshotkill = False
         self.inverted = False
         self.teleport = False
@@ -96,77 +85,43 @@ class Player(pygame.sprite.Sprite):
         self.pets_purchased = ["Dog"]
         self.dying = False
         self.dead = False
-        self.enemies_spawn_multiplier = 1.1
         self.health_drop = False
         self.best_time = 0
         self.load_progress()
 
     def get_save_path(self):
-        """Determine the save directory and file path."""
-        if os.name == 'nt':  # Windows
-            save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand")
-        else:  # macOS/Linux
-            save_dir = os.path.expanduser("~/.hitorstand")
-        
-        # Ensure the directory exists
-        os.makedirs(save_dir, exist_ok=True)
-        
-        # Return the full path to the save file
-        return os.path.join(save_dir, "player_progress.json")
+        return str(save_path())
 
     def save_progress(self):
-        save_location = self.get_save_path()
-        player_data = {
-            "has_dash": self.has_dash,
-            "level": self.level,
-            "exp": self.exp,
-            "coins": self.coins,
-            "weapons_purchased": self.weapons_purchased,
-            "pets_purchased": self.pets_purchased,
-            "best_time": self.best_time,
-            "exp_required": self.exp_required,
-            "max_health": self.max_health,
-        }
-        with open(save_location, "w") as file:
-            json.dump(player_data, file)
-        print(f"Progress saved to {save_location}")
+        write_progress({key: getattr(self, key) for key in DEFAULT_PROGRESS}, self.get_save_path())
 
     def load_progress(self):
-        save_location = self.get_save_path()
-        if os.path.exists(save_location):
-            with open(save_location, "r") as file:
-                player_data = json.load(file)
-                self.has_dash = player_data["has_dash"]
-                self.level = player_data["level"]
-                self.exp = player_data["exp"]
-                self.coins = player_data["coins"]
-                self.weapons_purchased = player_data["weapons_purchased"]
-                self.pets_purchased = player_data["pets_purchased"]
-                self.best_time = player_data["best_time"]
-                self.exp_required = player_data["exp_required"]
-                self.max_health = player_data["max_health"]
-                print(f"Progress loaded from {save_location}")
-        else:
-            print("No save file found. Starting with default values.")
-    def activate_powerup(self):
-        """
-        Activates the invincibility power-up for 15 seconds.
-        """
-        self.powerup_active = True
-        self.powerup_timer = 15 * fps  # 15 seconds worth of frames
-        # self.image.fill(dark_red)
+        for key, value in read_progress(self.get_save_path()).items():
+            setattr(self, key, value)
+        self.health = self.max_health
+
+    def reset_combat_state(self):
+        """Temporary battlefield effects must not leak into another run."""
+        self.invincible = False
+        self.oneshotkill = False
+        self.inverted = False
+        self.teleport = False
+        self.health_drop = False
+        self.de_spawner_active = False
+        self.de_spawner_timer = 0
 
     def update(self):
 
-        # getting the keys input:
+        if self.dead:
+            return
         self.frame_count += 1
 
         keys = pygame.key.get_pressed()
 
-        if self.dying != True:
+        if not self.dying:
             movement = [0, 0]  # [dx, dy]
 
-            if self.inverted == False:  # Normal controls
+            if not self.inverted:  # Normal controls
                 if keys[pygame.K_w] and self.rect.top > 0:
                     movement[1] -= self.speed
                 if keys[pygame.K_s] and self.rect.bottom < config.height:
@@ -197,37 +152,24 @@ class Player(pygame.sprite.Sprite):
 
         if self.dying:
             if self.frame_count % 12 == 0:
-                if self.curernt_sprite_dead >= len(self.sprites_dead):
+                if self.current_sprite_dead >= len(self.sprites_dead):
                     self.dying = False
-                    self.curernt_sprite_dead = 0
+                    self.current_sprite_dead = 0
                     self.health = self.max_health
                     self.dead = True
-                self.image = self.sprites_dead[int(self.curernt_sprite_dead)]
-                self.curernt_sprite_dead += 1
-                return
-
-        # Power-up timer logic
-        if self.powerup_active:
-            self.powerup_timer -= 1
-            if self.powerup_timer <= 0:
-                self.powerup_active = False  # Deactivate power-up
-                # self.image.fill(cute_purple)  # Revert to original color
-
-                self.rect.x -= self.speed
-            if self.powerup_active:
-                self.powerup_timer -= 1
-                if self.powerup_timer <= 0:
-                    self.powerup_active = False  # Deactivate power-up
-                # self.image.fill(cute_purple)  # Revert to original color
+                else:
+                    self.image = self.sprites_dead[self.current_sprite_dead]
+                    self.current_sprite_dead += 1
+            return
 
         if self.frame_count % 12 == 0:
-            if not any(keys):
-                self.curernt_sprite_idle += 1
-            if self.curernt_sprite_idle >= len(self.sprites_idle):
-                self.curernt_sprite_idle = 0
-            self.image = self.sprites_idle[int(self.curernt_sprite_idle)]
+            if not any(keys[key] for key in (pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d)):
+                self.current_sprite_idle += 1
+            if self.current_sprite_idle >= len(self.sprites_idle):
+                self.current_sprite_idle = 0
+            self.image = self.sprites_idle[int(self.current_sprite_idle)]
 
-        if self.dying != True:
+        if not self.dying:
             if self.frame_count % 3 == 0:
                 if (
                     keys[pygame.K_d]
@@ -235,16 +177,14 @@ class Player(pygame.sprite.Sprite):
                     or keys[pygame.K_s]
                     or keys[pygame.K_a]
                 ):
-                    self.curernt_sprite_run += 1
-                    if self.curernt_sprite_run >= len(self.sprites_run):
-                        self.curernt_sprite_run = 0
+                    self.current_sprite_run += 1
+                    if self.current_sprite_run >= len(self.sprites_run):
+                        self.current_sprite_run = 0
                     if keys[pygame.K_a]:
-                        self.image = pygame.transform.flip(
-                            self.sprites_run[int(self.curernt_sprite_run)], True, False
-                        )
+                        self.image = self.sprites_run_left[self.current_sprite_run]
                     else:
-                        self.image = self.sprites_run[int(self.curernt_sprite_run)]
-            if self.de_spawner_active == True:
+                        self.image = self.sprites_run[int(self.current_sprite_run)]
+            if self.de_spawner_active:
                 self.de_spawner_timer -= 1
                 if self.de_spawner_timer <= 0:
                     self.de_spawner_active = False
@@ -253,7 +193,6 @@ class Player(pygame.sprite.Sprite):
                 self.dash_cooldown -= 1
 
             # Check for dash input
-            keys = pygame.key.get_pressed()
             if keys[pygame.K_SPACE] and self.has_dash:
                 self.dash()
 
@@ -272,7 +211,6 @@ class Player(pygame.sprite.Sprite):
     def glow(self, surface, radius, color):
         glow_surface = glow_image(radius, tuple(color))
 
-        # Blit the glow onto the main surface at the player's center
         surface.blit(
             glow_surface, (self.rect.centerx - radius, self.rect.centery - radius)
         )
@@ -285,14 +223,13 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        # Draw the hitbox
-        pygame.draw.rect(screen, (255, 0, 0), self.rect, 2)  # Red color, 2-pixel border
 
     def shoot(self, bullets):
         """
         bullets --> pygame group where i will add bullets
         """
-        # cooldown ==> how many frames i need to wait until i can shoot again
+        if self.dying or self.dead:
+            return
         if self.bullet_cooldown <= 0:
             bullet_class = {
                 "Basic Spell": pistol,
@@ -302,19 +239,13 @@ class Player(pygame.sprite.Sprite):
                 "Astral Beam": sniper,
             }[self.bullet_type]
 
-            # === defining the directions in wich the bullets will fly ===
-            # These 4 directions are, in order, right, left, up, down
             for angle in [0, math.pi, math.pi / 2, 3 * math.pi / 2]:
 
-                # === creating a bullet for each angle ===
 
-                # I will use self.rect.centerx to make the x position of the bullet the same as the x position of the player, thus making the bullet come out of them.
                 # finally, the directtion of the bullet is the angle
                 bullet = bullet_class(self.rect.centerx, self.rect.centery, angle)
-                # adding the bullet to the bullets pygame group
                 bullets.add(bullet)
 
-            # resetting the cooldown
             self.bullet_cooldown = self.fire_rate[self.bullet_type]
 
         self.bullet_cooldown -= 1
@@ -325,9 +256,8 @@ class Player(pygame.sprite.Sprite):
         """
         bar_width = 50  # Width of the health bar
         bar_height = 8  # Height of the health bar
-        health_ratio = self.health / self.max_health  # Fraction of health remaining
+        health_ratio = max(0, min(1, self.health / self.max_health))  # Fraction of health remaining
 
-        # Positioning the health bar below the player
         bar_x = self.rect.centerx - bar_width // 2
         bar_y = self.rect.bottom + 5  # Just below the bottom of the player sprite
 
@@ -355,6 +285,9 @@ class Player(pygame.sprite.Sprite):
 
             if direction.length() > 0:
                 direction = direction.normalize()
+                if self.inverted:
+                    direction = -direction
                 self.rect.move_ip(direction * dash_distance)
+                self.rect.clamp_ip(pygame.Rect(0, 0, config.width, config.height))
                 self.dash_cooldown = config.fps * 2  # Cooldown in seconds
                 # Add visual/audio feedback here

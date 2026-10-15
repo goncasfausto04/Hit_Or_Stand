@@ -1,16 +1,15 @@
 import window
 import pygame
 import os
-import cv2
-from config import *
+from config import base_path, dark_red, red, white, black
 import config
 import sys
-import json
+from progress import DEFAULT_PROGRESS, write_progress
 from functools import lru_cache
 
 
 @lru_cache(maxsize=1)
-def fps_font():
+def fps_font(screen):
     return pygame.font.Font(None, 25)
 
 
@@ -37,8 +36,8 @@ def pause_game(screen, width, height,player):
         for event in window.get_events():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_clicked(0.4, 0.6, 0.2, 0.1, window.mouse_position()):
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if button_clicked(0.4, 0.6, 0.2, 0.1, event.pos):
                     player.save_progress()
                     return "menu"
             if event.type == pygame.QUIT:
@@ -50,72 +49,47 @@ def pause_game(screen, width, height,player):
 
 
 def play_video(video_path, resolution, sound_path):
-    """Play a video using Pygame and OpenCV."""
+    """Decode the intro directly into the shared canvas; OpenCV is intro-only."""
+    import cv2
 
-    # Initialize Pygame
     pygame.init()
-
-    # Load the video using OpenCV
     cap = cv2.VideoCapture(video_path)
-
-    # Get video properties
-    fps = cap.get(cv2.CAP_PROP_FPS)
-
-    # Set up the Pygame window
-    screen = window.get_screen()
-    pygame.display.set_caption("Video Player")
-
-    # Main loop
-    running = True
-    clock = pygame.time.Clock()
-
-    # play sound
-    pygame.mixer.music.load(sound_path)
-    pygame.mixer.music.play()
-
-    pygame.display.set_caption("Hit or Stand")
-
-    while running:
-
-        for event in window.get_events():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if (
-                    event.key == pygame.K_ESCAPE
-                    or event.key == pygame.K_RETURN
-                    or event.key == pygame.K_SPACE
+    try:
+        if not cap.isOpened():
+            return
+        video_fps = cap.get(cv2.CAP_PROP_FPS)
+        if not 0 < video_fps <= 240:
+            video_fps = 30
+        screen = window.get_screen()
+        clock = pygame.time.Clock()
+        pygame.mixer.music.load(sound_path)
+        pygame.mixer.music.set_volume(config.music_volume)
+        pygame.mixer.music.play()
+        while True:
+            for event in window.get_events():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN or (
+                    event.type == pygame.KEYDOWN and event.key in (
+                        pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_SPACE
+                    )
                 ):
-                    running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                running = False
-
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Resize the frame to fit the resolution
-        frame = cv2.resize(frame, resolution)
-
-        # Convert the frame to RGB format
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = pygame.surfarray.make_surface(frame)
-        frame = pygame.transform.rotate(frame, -90)
-        frame = pygame.transform.flip(frame, True, False)
-
-        # Display the frame
-        screen.blit(frame, (0, 0))
-        window.present()
-
-        # Control the frame rate
-        clock.tick(fps)
-
-    # Clean up
-    cap.release()
+                    return
+            ret, frame = cap.read()
+            if not ret:
+                return
+            frame = cv2.resize(frame, resolution)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pygame.surfarray.blit_array(screen, frame.swapaxes(0, 1))
+            window.present()
+            clock.tick(video_fps)
+    finally:
+        cap.release()
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
 
 
-base_path = os.path.dirname(__file__)
 video_path = os.path.join(base_path, "extras", "intro.mp4")
 sound_path = os.path.join(base_path, "extras", "wind.mp3")
 
@@ -219,7 +193,6 @@ def prompt(screen, width, height, content):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-                exit()
         window.present()
 
 
@@ -261,40 +234,13 @@ def handle_collision(player, collision_rects):
                     player.rect.bottom = rect.top
 
 def reset_progress():
-        """Reset progress to default values."""
-        if os.name == 'nt':  # Windows
-            save_dir = os.path.join(os.getenv('APPDATA'), ".hitorstand")
-        else:  # macOS/Linux
-            save_dir = os.path.expanduser("~/.hitorstand")
-        
-        # Ensure the directory exists
-        os.makedirs(save_dir, exist_ok=True)
+    """Use the same save schema as Player instead of duplicating it."""
+    write_progress(DEFAULT_PROGRESS)
 
-        save_location = os.path.join(save_dir, "player_progress.json")
-
-        # Define default progress data
-        default_data = {
-            "has_dash": False,
-            "level": 1,
-            "exp": 0,
-            "coins": 0,
-            "weapons_purchased": ["Basic Spell"],
-            "pets_purchased": ["Dog"],
-            "best_time": 0,
-            "exp_required": 10,
-            "max_health": 100
-            # Add other default attributes as needed
-        }
-
-        # Save the default data to the save file
-        with open(save_location, "w") as file:
-            json.dump(default_data, file)
-        
-        print(f"Progress reset to default and saved to {save_location}")
 
 def draw_fps(screen, clock):
     """Draw the FPS (frames per second) on the screen."""
-    font = fps_font()
+    font = fps_font(screen)
     fps = int(clock.get_fps())
     draw_text(screen, f"FPS: {fps}", 2, config.height*0.97, font, white)
 

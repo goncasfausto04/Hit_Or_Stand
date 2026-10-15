@@ -1,14 +1,18 @@
-import window
-import pygame
+"""Guided safe-house and combat tutorial."""
 import os
+import random
+import sys
+
+import pygame
+
 import config
+import window
+from abstractclasses import Invincibility
+from assets import load_image
+from config import base_path, black, soundtrack, white
+from enemy import initialEnemy
 from player import Player
-from enemy import *
-from shed import shed
-from utils import *
-from shop import shop
-from bullet import Bullet
-from abstractclasses import *
+from utils import draw_text_with_outline, prompt
 
 
 def tutorial():
@@ -25,8 +29,7 @@ def tutorial():
 
     # setting up the background and the screen
     background_path = os.path.join(base_path, "extras", "shedbg.png")
-    background = pygame.image.load(background_path)
-    background = pygame.transform.scale(background, config.resolution)
+    background = load_image(background_path, config.resolution)
     screen = window.get_screen()
     clock = pygame.time.Clock()
 
@@ -71,7 +74,7 @@ def tutorial():
                 screen,
                 config.width,
                 config.height * 1.5,
-                "Great!! You are not that dumb after all!",
+                "Great! You have the movement controls.",
             )
             promptcount += 1
         elif promptcount == 4:
@@ -147,7 +150,6 @@ def tutorial():
             )
             promptcount += 1
 
-        # draw the special area
         pygame.draw.rect(screen, (0, 255, 0), special_area, 2)
 
         for event in window.get_events():
@@ -157,7 +159,7 @@ def tutorial():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return
-                elif event.key in [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]:
+                elif event.key in (pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d):
                     wasd_keys_pressed.add(event.key)
 
                 # Check if all WASD keys have been pressed
@@ -201,7 +203,7 @@ def tutorial():
                 blockyfont,
             )
 
-        if promptcount >= 81 and promptcount < 240:
+        if 81 <= promptcount < 240:
             promptcount += 1
 
         if playertutorial.rect.left <= 0:
@@ -221,9 +223,8 @@ def battle():
     abspowerups_group = pygame.sprite.Group()
 
     # setting up the background and the screen
-    background_path = os.path.join(base_path, "extras", "battleground.png")
-    background = pygame.image.load(background_path)
-    background = pygame.transform.scale(background, config.resolution)
+    background_path = os.path.join(base_path, "extras", "Battleground.png")
+    background = load_image(background_path, config.resolution)
     screen = window.get_screen()
     clock = pygame.time.Clock()
 
@@ -248,7 +249,7 @@ def battle():
         clock.tick(config.fps)
         screen.blit(background, (0, 0))
 
-        if run_frames == True:
+        if run_frames:
             frame_count += 1
 
         # Update player position based on key presses
@@ -262,25 +263,28 @@ def battle():
 
         abspowerups_group.update()
         # Check for collisions between player and power-ups
-        if pygame.sprite.spritecollide(playertutorial, abspowerups_group, True):
+        collected = pygame.sprite.spritecollide(playertutorial, abspowerups_group, True)
+        for powerup in collected:
+            powerup.affect_player(playertutorial)
+        if collected:
             run_frames = True
 
         # Draw the enemies
         for enemy in enemy_group:
             enemy.draw(screen)
 
-        if spawn_powerup == True:
-            x, y = random.randint(50, 1230), random.randint(50, 650)
-            powerup_type = Invincibility
-            powerup1 = powerup_type(x, y)
+        if spawn_powerup:
+            x = random.randint(50, config.width - 50)
+            y = random.randint(50, config.height - 50)
+            powerup1 = Invincibility(x, y)
             abspowerups_group.add(powerup1)
             spawn_powerup = False
 
 
-        if update_enemy == True:
+        if update_enemy:
             enemy_group.update(playertutorial)
 
-        if player_shoot == True:
+        if player_shoot:
             # Draw the bullets
 
             playertutorial.shoot(bullets)
@@ -290,13 +294,14 @@ def battle():
                 bullet.draw(screen)
                 for enemy in enemy_group:
                     if enemy.rect.colliderect(bullet.rect):
-                        enemy.health -= bullet.damage  # Aplica dano no inimigo
-                        bullet.kill()  # Remove a bala após a colisão
+                        enemy.health -= bullet.damage  # Apply damage
+                        bullet.kill()  # Consume the bullet
                         if enemy.health <= 0:
                             enemy.kill()
                             dead_enemy = True
+                        break
 
-        if dead_enemy == True:
+        if dead_enemy:
             run_frames = True
             dead_enemy = False
 
@@ -362,7 +367,7 @@ def battle():
 
 
         if frame_count == 520:
-            prompt(screen, config.width, config.height * 1.5, "You are invencible now.")
+            prompt(screen, config.width, config.height * 1.5, "You are invincible now.")
 
         if frame_count == 530:
             prompt(
